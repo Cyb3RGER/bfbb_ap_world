@@ -1,3 +1,5 @@
+from multiprocessing import Process
+
 from BaseClasses import Item, Tutorial
 from worlds.AutoWorld import World, WebWorld
 from .Events import create_events
@@ -6,6 +8,17 @@ from .Locations import location_table, BfBBLocation
 from .Options import bfbb_options
 from .Regions import create_regions
 from .Rules import set_rules
+from worlds.LauncherComponents import Component, components, Type
+from .names import ItemNames
+
+
+def run_client():
+    from .BfBBClient import main  # lazy import
+    p = Process(target=main)
+    p.start()
+
+
+components.append(Component("BfBB Client", func=run_client))
 
 
 class BattleForBikiniBottomWeb(WebWorld):
@@ -40,14 +53,26 @@ class BattleForBikiniBottom(World):
     def create_items(self):
         # Generate item pool
         itempool = [
-                       "Golden Spatula"
+                       ItemNames.spat
                    ] * 100
         if self.multiworld.include_socks[self.player].value:
-            itempool += ["Lost Sock"] * 80
+            itempool += [ItemNames.sock] * 80
         if self.multiworld.include_skills[self.player].value:
-            itempool += ["Cruise Bubble", "Bubble Bowl"]
-        if self.multiworld.include_level_pickups[self.player].value:
-            pass # ToDo
+            itempool += [ItemNames.bubble_bowl, ItemNames.cruise_bubble]
+        if self.multiworld.include_golden_underwear[self.player].value:
+            itempool += [ItemNames.golden_underwear] * 3
+        if self.multiworld.include_level_items[self.player].value:
+            itempool += [ItemNames.lvl_itm_jf]
+            itempool += [ItemNames.lvl_itm_bb] * 11
+            itempool += [ItemNames.lvl_itm_gl] * 5
+            itempool += [ItemNames.lvl_itm_rb] * 6
+            itempool += [ItemNames.lvl_itm_bc] * 4
+            itempool += [ItemNames.lvl_itm_sm] * 8
+            itempool += [ItemNames.lvl_itm_kf1] * 6
+            itempool += [ItemNames.lvl_itm_kf2] * 6
+            itempool += [ItemNames.lvl_itm_gy] * 4
+        if self.multiworld.include_purple_so[self.player].value:
+            itempool += [ItemNames.so_5000] * 38
         # Convert itempool into real items
         itempool = list(map(lambda name: self.create_item(name), itempool))
 
@@ -62,13 +87,15 @@ class BattleForBikiniBottom(World):
 
     def fill_slot_data(self):
         return {
-            "deathLink": self.multiworld.death_link[self.player].value
+            "death_link": self.multiworld.death_link[self.player].value,
+            "include_socks": self.multiworld.include_socks[self.player].value,
+            "include_skills": self.multiworld.include_skills[self.player].value,
+            "include_golden_underwear": self.multiworld.include_golden_underwear[self.player].value,
+            "include_level_items": self.multiworld.include_level_items[self.player].value,
+            "include_purple_so": self.multiworld.include_purple_so[self.player].value,
         }
 
     def create_item(self, name: str) -> Item:
         item_data = item_table[name]
         item = BfBBItem(name, item_data.classification, item_data.id, self.player)
         return item
-
-
-

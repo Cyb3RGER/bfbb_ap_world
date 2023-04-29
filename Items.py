@@ -1,5 +1,6 @@
 import typing
 from BaseClasses import Item, ItemClassification
+from worlds.bfbb.names import ItemNames
 
 
 class ItemData(typing.NamedTuple):
@@ -18,24 +19,42 @@ class ItemData(typing.NamedTuple):
 
 class BfBBItem(Item):
     game: str = "Battle for Bikini Bottom"
+    # ToDo: remove (temp fix for generation with SM
+    type: str = 'lol'
 
 
 base_id = 149000
 
 item_table = {
-    "Golden Spatula": ItemData(base_id + 0, ItemClassification.progression),
-    "Lost Sock": ItemData(base_id + 1, ItemClassification.useful),
-    "Red Shiny Object": ItemData(base_id + 2, ItemClassification.filler),
-    "Yellow Shiny Object": ItemData(base_id + 3, ItemClassification.filler),
-    "Green Shiny Object": ItemData(base_id + 4, ItemClassification.filler),
-    "Blue Shiny Object": ItemData(base_id + 5, ItemClassification.filler),
-    "Purple Shiny Object": ItemData(base_id + 6, ItemClassification.filler),
-    "Bubble Bowl": ItemData(base_id + 7, ItemClassification.progression),
-    "Cruise Bubble": ItemData(base_id + 8, ItemClassification.progression),
-    "Golden Underwear": ItemData(base_id + 8, ItemClassification.useful),
-    "Defeated Robo-Sandy": ItemData(None, ItemClassification.progression),
-    "Defeated Robo-Patrick": ItemData(None, ItemClassification.progression),
-    "Victory": ItemData(None, ItemClassification.progression)
+    # spats
+    ItemNames.spat: ItemData(base_id + 0, ItemClassification.progression),
+    # socks
+    ItemNames.sock: ItemData(base_id + 1, ItemClassification.progression),
+    # shiny objects (unused rn)
+    ItemNames.so_red: ItemData(base_id + 2, ItemClassification.filler),
+    ItemNames.so_yellow: ItemData(base_id + 3, ItemClassification.filler),
+    ItemNames.so_green: ItemData(base_id + 4, ItemClassification.filler),
+    ItemNames.so_blue: ItemData(base_id + 5, ItemClassification.filler),
+    ItemNames.so_purple: ItemData(base_id + 6, ItemClassification.filler),
+    # skills
+    ItemNames.bubble_bowl: ItemData(base_id + 7, ItemClassification.progression),
+    ItemNames.cruise_bubble: ItemData(base_id + 8, ItemClassification.progression),
+    # golden underwear
+    ItemNames.golden_underwear: ItemData(base_id + 9, ItemClassification.useful),
+    # level pickups
+    ItemNames.lvl_itm_jf: ItemData(base_id + 10, ItemClassification.progression),
+    ItemNames.lvl_itm_bb: ItemData(base_id + 11, ItemClassification.progression),
+    ItemNames.lvl_itm_gl: ItemData(base_id + 12, ItemClassification.progression),
+    ItemNames.lvl_itm_rb: ItemData(base_id + 13, ItemClassification.progression),
+    ItemNames.lvl_itm_bc: ItemData(base_id + 14, ItemClassification.progression),
+    ItemNames.lvl_itm_sm: ItemData(base_id + 15, ItemClassification.progression),
+    ItemNames.lvl_itm_kf1: ItemData(base_id + 16, ItemClassification.progression),
+    ItemNames.lvl_itm_kf2: ItemData(base_id + 17, ItemClassification.progression),
+    ItemNames.lvl_itm_gy: ItemData(base_id + 18, ItemClassification.progression),
+    # shiny object rewards
+    ItemNames.so_5000: ItemData(base_id + 19, ItemClassification.useful),
+    # events
+    ItemNames.victory: ItemData(None, ItemClassification.progression)
 }
 
 lookup_id_to_name: typing.Dict[int, str] = {data.id: name for name, data in item_table.items() if data.id}

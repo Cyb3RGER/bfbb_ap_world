@@ -1,5 +1,6 @@
 import typing
 from BaseClasses import Location
+from .names import LocationNames
 
 
 class BfBBLocation(Location):
@@ -8,294 +9,322 @@ class BfBBLocation(Location):
 
 base_id = 149000
 
-patrick_spat_location_table = {f"Hub: Return {(i + 1) * 10} Socks To Patrick": base_id + 84 + i for i in range(0, 8)}
-krabs_spat_location_table = {
-    f"Hub: Pay Mr. Krabs {30000 + i * 5000 + (5000 if i == 7 else 0)} Shiny Objects": base_id + 92 + i for i in
-    range(0, 8)}
 spat_location_table = {
     # Hub (0-7)
-    "Hub1: On Top of the Pineapple": base_id + 0,
-    "Hub2: On Top of Shady Shoals": base_id + 1,
-    "Hub3: On Top of the Chum Bucket": base_id + 2,
-    "Pineapple: SpongeBob's Closet": base_id + 3,
-    "Squidward: Annoy Squidward": base_id + 4,
-    "Tree Dome: Ambush at the Tree Dome": base_id + 5,
-    "KK: Infestation at the Krusty Krab": base_id + 6,
-    "CB: A Wall Jump in the Bucket": base_id + 7,
+    LocationNames.spat_hb_01: base_id + 0,
+    LocationNames.spat_hb_02: base_id + 1,
+    LocationNames.spat_hb_03: base_id + 2,
+    LocationNames.spat_hb_04: base_id + 3,
+    LocationNames.spat_hb_05: base_id + 4,
+    LocationNames.spat_hb_06: base_id + 5,
+    LocationNames.spat_hb_07: base_id + 6,
+    LocationNames.spat_hb_08: base_id + 7,
     # JF (8-15)
-    "JF01: Top of the Hill": base_id + 8,
-    "JF01: Cowa-Bungee!": base_id + 9,
-    "JF02: Spelunking": base_id + 10,
-    "JF02: Patrick's Dilemma": base_id + 11,
-    "JF03: Navigate the Canyons and Mesas": base_id + 12,
-    "JF03: Drain the Lake": base_id + 13,
-    "JF04: Slide Leap": base_id + 14,
-    "JF01: Defeat King Jellyfish": base_id + 15,
+    LocationNames.spat_jf_01: base_id + 8,
+    LocationNames.spat_jf_02: base_id + 9,
+    LocationNames.spat_jf_03: base_id + 10,
+    LocationNames.spat_jf_04: base_id + 11,
+    LocationNames.spat_jf_05: base_id + 12,
+    LocationNames.spat_jf_06: base_id + 13,
+    LocationNames.spat_jf_07: base_id + 14,
+    LocationNames.spat_jf_08: base_id + 15,
     # BB (16-23)
-    "BB01: End of the Road": base_id + 16,
-    "BB01: Learn Sandy's Moves": base_id + 17,
-    "BB01: Tikis Go Boom": base_id + 18,
-    "BB02: Across the Rooftops": base_id + 19,
-    "BB02: Swingin' Sandy": base_id + 20,
-    "BB03: Ambush in the Lighthouse": base_id + 21,
-    "BB04: Extreme Bungee": base_id + 22,
-    "BB04: Come Back With the Cruise Bubble": base_id + 23,
+    LocationNames.spat_bb_01: base_id + 16,
+    LocationNames.spat_bb_02: base_id + 17,
+    LocationNames.spat_bb_03: base_id + 18,
+    LocationNames.spat_bb_04: base_id + 19,
+    LocationNames.spat_bb_05: base_id + 20,
+    LocationNames.spat_bb_06: base_id + 21,
+    LocationNames.spat_bb_07: base_id + 22,
+    LocationNames.spat_bb_08: base_id + 23,
     # GL (24-31)
-    "GL01: King of the Castle": base_id + 24,
-    "GL01: Connect the Towers": base_id + 25,
-    "GL01: Save the Children": base_id + 26,
-    "GL01: Over the Moat": base_id + 27,
-    "GL02: Through the Sea Caves": base_id + 28,
-    "GL03: Clean out the Bumper Boats": base_id + 29,
-    "GL03: Slip and Slide Under the Pier": base_id + 30,
-    "GL03: Tower Bungee": base_id + 31,
+    LocationNames.spat_gl_01: base_id + 24,
+    LocationNames.spat_gl_02: base_id + 25,
+    LocationNames.spat_gl_03: base_id + 26,
+    LocationNames.spat_gl_04: base_id + 27,
+    LocationNames.spat_gl_05: base_id + 28,
+    LocationNames.spat_gl_06: base_id + 29,
+    LocationNames.spat_gl_07: base_id + 30,
+    LocationNames.spat_gl_08: base_id + 31,
     # Poseidome (32)
-    "Poseidome: Defeat Robo-Sandy": base_id + 32,
+    LocationNames.spat_b1_01: base_id + 32,
     # RB (33-40)
-    "RB01: Get to the Museum": base_id + 33,
-    "RB01: Slip Sliding Away": base_id + 34,
-    "RB01: Return the Museum's Art": base_id + 35,
-    "RB01: Swingalong Spatula": base_id + 36,
-    "RB02: Plundering Robots in the Museum": base_id + 37,
-    "RB03: Across the Trench of Darkness": base_id + 38,
-    "RB03: Lasers are Fun and Good for You": base_id + 39,
-    "RB03: How in Tarnation Do You Get There?": base_id + 40,
+    LocationNames.spat_rb_01: base_id + 33,
+    LocationNames.spat_rb_02: base_id + 34,
+    LocationNames.spat_rb_03: base_id + 35,
+    LocationNames.spat_rb_04: base_id + 36,
+    LocationNames.spat_rb_05: base_id + 37,
+    LocationNames.spat_rb_06: base_id + 38,
+    LocationNames.spat_rb_07: base_id + 39,
+    LocationNames.spat_rb_08: base_id + 40,
     # Merm (41-48)
-    "Merm01: Top of the Entrance Area": base_id + 41,
-    "Merm02: Top of the Computer Area": base_id + 42,
-    "Merm02: Shut Down the Security System": base_id + 43,
-    "Merm02: The Funnel Machines": base_id + 44,
-    "Merm02: The Spinning Towers of Power": base_id + 45,
-    "Merm03: Top of the Security Tunnel": base_id + 46,
-    "Merm04: Complete the Rolling Ball Room": base_id + 47,
-    "Merm05: Defeat Prawn": base_id + 48,
+    LocationNames.spat_bc_01: base_id + 41,
+    LocationNames.spat_bc_02: base_id + 42,
+    LocationNames.spat_bc_03: base_id + 43,
+    LocationNames.spat_bc_04: base_id + 44,
+    LocationNames.spat_bc_05: base_id + 45,
+    LocationNames.spat_bc_06: base_id + 46,
+    LocationNames.spat_bc_07: base_id + 47,
+    LocationNames.spat_bc_08: base_id + 48,
     # SM (49-56)
-    "SM01: Frosty Bungee": base_id + 49,
-    "SM01: Top of the Lodge": base_id + 50,
-    "SM02: Defeat Robots on Guppy Mound": base_id + 51,
-    "SM02: Beat Mrs. Puff's Time": base_id + 52,
-    "SM03: Defeat Robots on Flounder Hill": base_id + 53,
-    "SM03: Beat Bubble Buddy's Time": base_id + 54,
-    "SM04: Defeat Robots on Sand Mountain": base_id + 55,
-    "SM04: Beat Larry's Time": base_id + 56,
+    LocationNames.spat_sm_01: base_id + 49,
+    LocationNames.spat_sm_02: base_id + 50,
+    LocationNames.spat_sm_03: base_id + 51,
+    LocationNames.spat_sm_04: base_id + 52,
+    LocationNames.spat_sm_05: base_id + 53,
+    LocationNames.spat_sm_06: base_id + 54,
+    LocationNames.spat_sm_07: base_id + 55,
+    LocationNames.spat_sm_08: base_id + 56,
     # IP (57)
-    "IP: Defeat Robo-Patrick": base_id + 57,
+    LocationNames.spat_b2_01: base_id + 57,
     # KF (58-65)
-    "KF01: Through the Woods": base_id + 58,
-    "KF01: Find All the Lost Campers": base_id + 59,
-    "KF02: Tiki Roundup": base_id + 60,
-    "KF02: Down in the Swamp": base_id + 61,
-    "KF04: Through the Kelp Caves": base_id + 62,
-    "KF04: Power Crystal Crisis": base_id + 63,
-    "KF05: Kelp Vine Slide": base_id + 64,
-    "KF05: Beat Mermaid Man's Time": base_id + 65,
+    LocationNames.spat_kf_01: base_id + 58,
+    LocationNames.spat_kf_02: base_id + 59,
+    LocationNames.spat_kf_03: base_id + 60,
+    LocationNames.spat_kf_04: base_id + 61,
+    LocationNames.spat_kf_05: base_id + 62,
+    LocationNames.spat_kf_06: base_id + 63,
+    LocationNames.spat_kf_07: base_id + 64,
+    LocationNames.spat_kf_08: base_id + 65,
     # GY (66-73)
-    "GY01: Top of the Entrance Area": base_id + 66,
-    "GY01: A Path Through the Goo": base_id + 67,
-    "GY01: Goo Tanker Ahoy!": base_id + 68,
-    "GY02: Top of the Stack of Ships": base_id + 69,
-    "GY02: Shipwreck Bungee": base_id + 70,
-    "GY03: Destroy the Robot Ship": base_id + 71,
-    "GY03: Get Aloft There, Matey!": base_id + 72,
-    "GY04: Defeat the Flying Dutchman": base_id + 73,
+    LocationNames.spat_gy_01: base_id + 66,
+    LocationNames.spat_gy_02: base_id + 67,
+    LocationNames.spat_gy_03: base_id + 68,
+    LocationNames.spat_gy_04: base_id + 69,
+    LocationNames.spat_gy_05: base_id + 70,
+    LocationNames.spat_gy_06: base_id + 71,
+    LocationNames.spat_gy_07: base_id + 72,
+    LocationNames.spat_gy_08: base_id + 73,
     # Dream (74-81)
-    "Dream01: Across the Dreamscape": base_id + 74,
-    "Dream01: Follow the Bouncing Ball": base_id + 75,
-    "Dream02: Slidin' Texas Style": base_id + 76,
-    "Dream02: Swingers Ahoy": base_id + 77,
-    "Dream03: Music is in the Ear of the Beholder": base_id + 78,
-    "Dream04: Krabby Patty Platforms": base_id + 79,
-    "Dream01: Super Bounce": base_id + 80,
-    "Dream05: Here You Go": base_id + 81,
+    LocationNames.spat_db_01: base_id + 74,
+    LocationNames.spat_db_02: base_id + 75,
+    LocationNames.spat_db_03: base_id + 76,
+    LocationNames.spat_db_04: base_id + 77,
+    LocationNames.spat_db_05: base_id + 78,
+    LocationNames.spat_db_06: base_id + 79,
+    LocationNames.spat_db_07: base_id + 80,
+    LocationNames.spat_db_08: base_id + 81,
     # CB (82-83)
-    "CB Lab: KAH - RAH - TAE!": base_id + 82,
-    "CB Lab: The Small Shall Rule... Or No": base_id + 83,
+    LocationNames.spat_b3_01: base_id + 82,
+    LocationNames.spat_b3_02: base_id + 83,
     # Patrick (84-91)
-    **patrick_spat_location_table,
+    LocationNames.spat_ps_01: base_id + 84,
+    LocationNames.spat_ps_02: base_id + 85,
+    LocationNames.spat_ps_03: base_id + 86,
+    LocationNames.spat_ps_04: base_id + 87,
+    LocationNames.spat_ps_05: base_id + 88,
+    LocationNames.spat_ps_06: base_id + 89,
+    LocationNames.spat_ps_07: base_id + 90,
+    LocationNames.spat_ps_08: base_id + 91,
     # Mr. Krabs (92-99)
-    **krabs_spat_location_table,
-}
-
-SOCK_NAME_TABLE = {
-    "Hub3": [
-        "Behind KK under trash",
-    ],
-    "Hub2": [
-        "Fountain",
-    ],
-    "Hub1": [
-        "Patrick",
-    ],
-    "Pineapple": [
-        "Library",
-    ],
-    "Squidward": [
-        "Destroy all furniture",
-    ],
-    "Patrick": [
-        "Destroy all furniture"
-    ],
-    "Shoals": [
-        "Shoals",
-    ],
-    "KK": [
-        "",
-    ],
-    "JF01": [
-        "On JF rock",
-        "Bungee",
-        "On island",
-        "Fountain",
-        "On goo",
-        "Bowling minigame",
-    ],
-    "JF02": [
-        "On slide",
-        "After slide",
-        "In cave near slide",
-        "On goo in cave",
-    ],
-    "JF03": [
-        "On Cliff near Clamp",
-        "Tiki Minigame",
-        "Near wall jumps",
-    ],
-    "JF04": [
-        "On Slide after JFK",
-    ],
-    "BB01": [
-        "On broken house",
-        "In broken house",
-        "On floating platform",
-        "On copper house",
-    ],
-    "BB02": [
-        "On windmill",
-        "Under slide",
-        "Behind lighthouse"
-    ],
-    "BB03": [
-        "On top"
-    ],
-    "BB04": [
-        "South side"
-    ],
-    "GL01": [
-        "On watchtower",
-        "In sand castle",
-        "On juice bar",
-        "On top of sand castle",
-        "Sand castle entrance gate"
-    ],
-    "GL02": [
-        "Under ledge near entrance",
-        "On goo",
-        "On side ledge"
-    ],
-    "GL03": [
-        "Tiki minigame",
-        "Sliding minigame",
-        "On booth"
-    ],
-    "RB01": [
-        "On roof near elevator",
-        "On rock",
-        "Near slide end"
-    ],
-    "RB02": [
-        "Ledge near exit",
-        "Midway right ledge",
-        "On entrance"
-    ],
-    "RB03": [
-        "Bungee",
-        "Near Duplicatotron",
-        "At button under laser"
-    ],
-    "Merm01": [
-        "Bungee"
-    ],
-    "Merm02": [
-        "On light"
-    ],
-    "Merm03": [
-        "Conveyor clamp"
-    ],
-    "Merm04": [
-        "Behind tilting platform near end"
-    ],
-    "SM01": [
-        "Below bridge",
-        "Snowman",
-    ],
-    "SM02": [
-        "Ledge near start",
-        "Underpass",
-        "Ledge near end"
-    ],
-    "SM03": [
-        "At end",
-        "On last tunnel near end"
-    ],
-    "SM04": [
-        "Top ledge near start",
-        "In hidden cave",
-        "On ice platforms"
-    ],
-    "KF01": [
-        "On high platform near Ms. Puff",
-        "At waterfall",
-        "Tiki bowling"
-    ],
-    "KF02": [
-        "On ledge",
-        "On tiki stack"
-    ],
-    "KF04": [
-        "On ledge near entrance"
-    ],
-    "KF05": [
-        "On slide"
-    ],
-    "GY01": [
-        "On mast platform in goo"
-    ],
-    "GY02": [
-        "In shipwreck"
-    ],
-    "GY03": [
-        "On rope on robot ship"
-    ],
-    "Dream02": [
-        "On top slide near skull",
-        "Oil tower",
-        "Behind house on Swingers platform"
-    ],
-    "Dream03": [
-        "In air near trampoline"
-    ],
-    "Dream04": [
-        "Behind grill"
-    ]
-
+    LocationNames.spat_ks_01: base_id + 92,
+    LocationNames.spat_ks_02: base_id + 93,
+    LocationNames.spat_ks_03: base_id + 94,
+    LocationNames.spat_ks_04: base_id + 95,
+    LocationNames.spat_ks_05: base_id + 96,
+    LocationNames.spat_ks_06: base_id + 97,
+    LocationNames.spat_ks_07: base_id + 98,
+    LocationNames.spat_ks_08: base_id + 99,
 }
 
 sock_location_table = {
+    LocationNames.sock_hub3_01: base_id + 100 + 0,
+    LocationNames.sock_hub2_03: base_id + 100 + 1,
+    LocationNames.sock_hub1_04: base_id + 100 + 2,
+    LocationNames.sock_pineapple_01: base_id + 100 + 3,
+    LocationNames.sock_squid_01: base_id + 100 + 4,
+    LocationNames.sock_pat_01: base_id + 100 + 5,
+    LocationNames.sock_shoals_01: base_id + 100 + 6,
+    LocationNames.sock_kk_01: base_id + 100 + 7,
+    LocationNames.sock_jf01_01: base_id + 100 + 8,
+    LocationNames.sock_jf01_02: base_id + 100 + 9,
+    LocationNames.sock_jf01_03: base_id + 100 + 10,
+    LocationNames.sock_jf01_04: base_id + 100 + 11,
+    LocationNames.sock_jf01_05: base_id + 100 + 12,
+    LocationNames.sock_jf01_06: base_id + 100 + 13,
+    LocationNames.sock_jf02_01: base_id + 100 + 14,
+    LocationNames.sock_jf02_02: base_id + 100 + 15,
+    LocationNames.sock_jf02_03: base_id + 100 + 16,
+    LocationNames.sock_jf02_04: base_id + 100 + 17,
+    LocationNames.sock_jf03_01: base_id + 100 + 18,
+    LocationNames.sock_jf03_02: base_id + 100 + 19,
+    LocationNames.sock_jf03_03: base_id + 100 + 20,
+    LocationNames.sock_jf04_01: base_id + 100 + 21,
+    LocationNames.sock_bb01_01: base_id + 100 + 22,
+    LocationNames.sock_bb01_02: base_id + 100 + 23,
+    LocationNames.sock_bb01_03: base_id + 100 + 24,
+    LocationNames.sock_bb01_04: base_id + 100 + 25,
+    LocationNames.sock_bb02_01: base_id + 100 + 26,
+    LocationNames.sock_bb02_02: base_id + 100 + 27,
+    LocationNames.sock_bb02_03: base_id + 100 + 28,
+    LocationNames.sock_bb03_01: base_id + 100 + 29,
+    LocationNames.sock_bb04_01: base_id + 100 + 30,
+    LocationNames.sock_gl01_01: base_id + 100 + 31,
+    LocationNames.sock_gl01_02: base_id + 100 + 32,
+    LocationNames.sock_gl01_03: base_id + 100 + 33,
+    LocationNames.sock_gl01_04: base_id + 100 + 34,
+    LocationNames.sock_gl01_05: base_id + 100 + 35,
+    LocationNames.sock_gl02_01: base_id + 100 + 36,
+    LocationNames.sock_gl02_02: base_id + 100 + 37,
+    LocationNames.sock_gl02_03: base_id + 100 + 38,
+    LocationNames.sock_gl03_01: base_id + 100 + 39,
+    LocationNames.sock_gl03_02: base_id + 100 + 40,
+    LocationNames.sock_gl04_03: base_id + 100 + 41,
+    LocationNames.sock_rb01_01: base_id + 100 + 42,
+    LocationNames.sock_rb01_02: base_id + 100 + 43,
+    LocationNames.sock_rb01_03: base_id + 100 + 44,
+    LocationNames.sock_rb02_01: base_id + 100 + 45,
+    LocationNames.sock_rb02_02: base_id + 100 + 46,
+    LocationNames.sock_rb02_03: base_id + 100 + 47,
+    LocationNames.sock_rb03_01: base_id + 100 + 48,
+    LocationNames.sock_rb03_02: base_id + 100 + 49,
+    LocationNames.sock_rb03_03: base_id + 100 + 50,
+    LocationNames.sock_bc01_01: base_id + 100 + 51,
+    LocationNames.sock_bc02_01: base_id + 100 + 52,
+    LocationNames.sock_bc03_01: base_id + 100 + 53,
+    LocationNames.sock_bc04_01: base_id + 100 + 54,
+    LocationNames.sock_sm01_01: base_id + 100 + 55,
+    LocationNames.sock_sm01_02: base_id + 100 + 56,
+    LocationNames.sock_sm02_01: base_id + 100 + 57,
+    LocationNames.sock_sm02_02: base_id + 100 + 58,
+    LocationNames.sock_sm02_03: base_id + 100 + 59,
+    LocationNames.sock_sm03_01: base_id + 100 + 60,
+    LocationNames.sock_sm03_02: base_id + 100 + 61,
+    LocationNames.sock_sm04_01: base_id + 100 + 62,
+    LocationNames.sock_sm04_02: base_id + 100 + 63,
+    LocationNames.sock_sm04_03: base_id + 100 + 64,
+    LocationNames.sock_kf01_01: base_id + 100 + 65,
+    LocationNames.sock_kf01_02: base_id + 100 + 66,
+    LocationNames.sock_kf01_03: base_id + 100 + 67,
+    LocationNames.sock_kf02_01: base_id + 100 + 68,
+    LocationNames.sock_kf02_02: base_id + 100 + 69,
+    LocationNames.sock_kf04_01: base_id + 100 + 70,
+    LocationNames.sock_kf05_01: base_id + 100 + 71,
+    LocationNames.sock_gy01_01: base_id + 100 + 72,
+    LocationNames.sock_gy02_01: base_id + 100 + 73,
+    LocationNames.sock_gy03_01: base_id + 100 + 74,
+    LocationNames.sock_db02_01: base_id + 100 + 75,
+    LocationNames.sock_db02_02: base_id + 100 + 76,
+    LocationNames.sock_db02_03: base_id + 100 + 77,
+    LocationNames.sock_db03_01: base_id + 100 + 78,
+    LocationNames.sock_db04_01: base_id + 100 + 79,
 }
-j = 0
-for k, v in SOCK_NAME_TABLE.items():
-    for i in range(0, len(v)):
-        sock_location_table[f"{k}: Lost Sock #{i + 1}{f' ({v[i]})' if len(v[i]) > 0 else ''}"] = base_id + 100 + j
-        j += 1
+
+level_item_location_table = {
+    LocationNames.lvl_itm_jf_01: base_id + 183 + 0,
+    LocationNames.lvl_itm_bb_01: base_id + 183 + 1,
+    LocationNames.lvl_itm_bb_02: base_id + 183 + 2,
+    LocationNames.lvl_itm_bb_03: base_id + 183 + 3,
+    LocationNames.lvl_itm_bb_04: base_id + 183 + 4,
+    LocationNames.lvl_itm_bb_05: base_id + 183 + 5,
+    LocationNames.lvl_itm_bb_06: base_id + 183 + 6,
+    LocationNames.lvl_itm_bb_07: base_id + 183 + 7,
+    LocationNames.lvl_itm_bb_08: base_id + 183 + 8,
+    LocationNames.lvl_itm_bb_09: base_id + 183 + 9,
+    LocationNames.lvl_itm_bb_10: base_id + 183 + 10,
+    LocationNames.lvl_itm_bb_11: base_id + 183 + 11,
+    LocationNames.lvl_itm_gl_01: base_id + 183 + 12,
+    LocationNames.lvl_itm_gl_02: base_id + 183 + 13,
+    LocationNames.lvl_itm_gl_03: base_id + 183 + 14,
+    LocationNames.lvl_itm_gl_04: base_id + 183 + 15,
+    LocationNames.lvl_itm_gl_05: base_id + 183 + 16,
+    LocationNames.lvl_itm_rb_01: base_id + 183 + 17,
+    LocationNames.lvl_itm_rb_02: base_id + 183 + 18,
+    LocationNames.lvl_itm_rb_03: base_id + 183 + 19,
+    LocationNames.lvl_itm_rb_04: base_id + 183 + 20,
+    LocationNames.lvl_itm_rb_05: base_id + 183 + 21,
+    LocationNames.lvl_itm_rb_06: base_id + 183 + 22,
+    LocationNames.lvl_itm_bc_01: base_id + 183 + 23,
+    LocationNames.lvl_itm_bc_02: base_id + 183 + 24,
+    LocationNames.lvl_itm_bc_03: base_id + 183 + 25,
+    LocationNames.lvl_itm_bc_04: base_id + 183 + 26,
+    LocationNames.lvl_itm_sm_01: base_id + 183 + 27,
+    LocationNames.lvl_itm_sm_02: base_id + 183 + 28,
+    LocationNames.lvl_itm_sm_03: base_id + 183 + 29,
+    LocationNames.lvl_itm_sm_04: base_id + 183 + 30,
+    LocationNames.lvl_itm_sm_05: base_id + 183 + 31,
+    LocationNames.lvl_itm_sm_06: base_id + 183 + 32,
+    LocationNames.lvl_itm_sm_07: base_id + 183 + 33,
+    LocationNames.lvl_itm_sm_08: base_id + 183 + 34,
+    LocationNames.lvl_itm_kf1_01: base_id + 183 + 35,
+    LocationNames.lvl_itm_kf1_02: base_id + 183 + 36,
+    LocationNames.lvl_itm_kf1_03: base_id + 183 + 37,
+    LocationNames.lvl_itm_kf1_04: base_id + 183 + 38,
+    LocationNames.lvl_itm_kf1_05: base_id + 183 + 39,
+    LocationNames.lvl_itm_kf1_06: base_id + 183 + 40,
+    LocationNames.lvl_itm_kf2_01: base_id + 183 + 41,
+    LocationNames.lvl_itm_kf2_02: base_id + 183 + 42,
+    LocationNames.lvl_itm_kf2_03: base_id + 183 + 43,
+    LocationNames.lvl_itm_kf2_04: base_id + 183 + 44,
+    LocationNames.lvl_itm_kf2_05: base_id + 183 + 45,
+    LocationNames.lvl_itm_kf2_06: base_id + 183 + 46,
+    LocationNames.lvl_itm_gy_01: base_id + 183 + 47,
+    LocationNames.lvl_itm_gy_02: base_id + 183 + 48,
+    LocationNames.lvl_itm_gy_03: base_id + 183 + 49,
+    LocationNames.lvl_itm_gy_04: base_id + 183 + 50,
+}
+
+golden_underwear_location_table = {
+    LocationNames.golden_under_01: base_id + 180,
+    LocationNames.golden_under_02: base_id + 181,
+    LocationNames.golden_under_03: base_id + 182,
+}
+
+skill_location_table = {
+    LocationNames.bubble_bowl: base_id + 234,
+    LocationNames.cruise_bubble: base_id + 235,
+}
+
+purple_so_location_table = {
+    LocationNames.purple_so_hub3_01: base_id + 236 + 0,
+    LocationNames.purple_so_jf01_01: base_id + 236 + 1,
+    LocationNames.purple_so_jf02_01: base_id + 236 + 2,
+    LocationNames.purple_so_jf03_01: base_id + 236 + 3,
+    LocationNames.purple_so_jf04_01: base_id + 236 + 4,
+    LocationNames.purple_so_bb01_01: base_id + 236 + 5,
+    LocationNames.purple_so_bb01_02: base_id + 236 + 6,
+    LocationNames.purple_so_bb02_01: base_id + 236 + 7,
+    LocationNames.purple_so_bb02_02: base_id + 236 + 8,
+    LocationNames.purple_so_bb03_01: base_id + 236 + 9,
+    LocationNames.purple_so_bb04_01: base_id + 236 + 10,
+    LocationNames.purple_so_gl01_01: base_id + 236 + 11,
+    LocationNames.purple_so_gl02_01: base_id + 236 + 12,
+    LocationNames.purple_so_gl03_01: base_id + 236 + 13,
+    LocationNames.purple_so_rb01_01: base_id + 236 + 14,
+    LocationNames.purple_so_rb02_01: base_id + 236 + 15,
+    LocationNames.purple_so_rb03_01: base_id + 236 + 16,
+    LocationNames.purple_so_bc01_01: base_id + 236 + 17,
+    LocationNames.purple_so_bc02_01: base_id + 236 + 18,
+    LocationNames.purple_so_bc02_02: base_id + 236 + 19,
+    LocationNames.purple_so_bc03_01: base_id + 236 + 20,
+    LocationNames.purple_so_bc04_01: base_id + 236 + 21,
+    LocationNames.purple_so_sm01_01: base_id + 236 + 22,
+    LocationNames.purple_so_sm02_01: base_id + 236 + 23,
+    LocationNames.purple_so_sm02_02: base_id + 236 + 24,
+    LocationNames.purple_so_sm04_01: base_id + 236 + 25,
+    LocationNames.purple_so_kf01_01: base_id + 236 + 26,
+    LocationNames.purple_so_kf02_01: base_id + 236 + 27,
+    LocationNames.purple_so_kf04_01: base_id + 236 + 28,
+    LocationNames.purple_so_kf05_01: base_id + 236 + 29,
+    LocationNames.purple_so_gy01_01: base_id + 236 + 30,
+    LocationNames.purple_so_gy02_01: base_id + 236 + 31,
+    LocationNames.purple_so_gy03_01: base_id + 236 + 32,
+    LocationNames.purple_so_db01_01: base_id + 236 + 33,
+    LocationNames.purple_so_db02_01: base_id + 236 + 34,
+    LocationNames.purple_so_db02_02: base_id + 236 + 35,
+    LocationNames.purple_so_db03_01: base_id + 236 + 36,
+    LocationNames.purple_so_db04_01: base_id + 236 + 37,
+
+}
 
 location_table = {
-    **spat_location_table,
-    **sock_location_table,
-    "Bubble Bowl": base_id + 202,
-    "Cruise Bubble": base_id + 203,
-    "Robo-Sandy": None,
-    "Robo-Patrick": None,
-    "Credits": None
+    **spat_location_table,  # 0 - 99
+    **sock_location_table,  # 100 - 179
+    **golden_underwear_location_table,  # 180 - 182
+    **level_item_location_table,  # 183 - 233
+    **skill_location_table,  # 234 - 235
+    **purple_so_location_table,  # 236 - 273
+    LocationNames.credits: None
 }
 
 lookup_id_to_name: typing.Dict[int, str] = {id: name for name, id in location_table.items()}
