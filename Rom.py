@@ -78,8 +78,8 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
                 break
         print('--extraction done--')
         print('--making changes--')
-        clr.AddReference(os.path.abspath(lib_path + '/IP/lib/IndustrialPark.dll'))
-        clr.AddReference(os.path.abspath(lib_path + '/IP/lib/HipHopFile.dll'))
+        clr.AddReference(os.path.abspath(lib_path + '/IP/IndustrialPark.exe'))
+        clr.AddReference(os.path.abspath(lib_path + '/IP/HipHopFile.dll'))
         from HipHopFile import Platform, Game
         from IndustrialPark import ArchiveEditorFunctions, Link, HexUIntTypeConverter
         class EventIDs(Enum):
