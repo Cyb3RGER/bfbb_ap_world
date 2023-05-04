@@ -24,7 +24,7 @@ so_green = "Green Shiny Object"
 so_blue = "Blue Shiny Object"
 so_purple = "Purple Shiny Object"
 # shiny objects (AP items)
-so_5000 = "5000 Shiny Objects"
+so_500 = "500 Shiny Objects"
 # characters
 char_pat = "Patrick"
 char_sandy = "Sandy"

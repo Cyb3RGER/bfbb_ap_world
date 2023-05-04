@@ -137,14 +137,14 @@ so_krabs_rules = [
     {},
     # locations
     {
-        LocationNames.spat_ks_01: lambda player: lambda state: state.has(ItemNames.so_5000, player, 2),
-        LocationNames.spat_ks_02: lambda player: lambda state: state.has(ItemNames.so_5000, player, 4),
-        LocationNames.spat_ks_03: lambda player: lambda state: state.has(ItemNames.so_5000, player, 6),
-        LocationNames.spat_ks_04: lambda player: lambda state: state.has(ItemNames.so_5000, player, 9),
-        LocationNames.spat_ks_05: lambda player: lambda state: state.has(ItemNames.so_5000, player, 12),
-        LocationNames.spat_ks_06: lambda player: lambda state: state.has(ItemNames.so_5000, player, 15),
-        LocationNames.spat_ks_07: lambda player: lambda state: state.has(ItemNames.so_5000, player, 19),
-        LocationNames.spat_ks_08: lambda player: lambda state: state.has(ItemNames.so_5000, player, 24),
+        LocationNames.spat_ks_01: lambda player: lambda state: state.has(ItemNames.so_500, player, 2),
+        LocationNames.spat_ks_02: lambda player: lambda state: state.has(ItemNames.so_500, player, 4),
+        LocationNames.spat_ks_03: lambda player: lambda state: state.has(ItemNames.so_500, player, 6),
+        LocationNames.spat_ks_04: lambda player: lambda state: state.has(ItemNames.so_500, player, 9),
+        LocationNames.spat_ks_05: lambda player: lambda state: state.has(ItemNames.so_500, player, 12),
+        LocationNames.spat_ks_06: lambda player: lambda state: state.has(ItemNames.so_500, player, 15),
+        LocationNames.spat_ks_07: lambda player: lambda state: state.has(ItemNames.so_500, player, 19),
+        LocationNames.spat_ks_08: lambda player: lambda state: state.has(ItemNames.so_500, player, 24),
     }
 ]
 

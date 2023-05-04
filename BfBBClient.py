@@ -1,16 +1,21 @@
 import asyncio
 import collections
+import os.path
+import shutil
+import subprocess
 import time
 import traceback
+import zipfile
 from enum import Flag
 from queue import SimpleQueue
 from typing import Callable, Optional, Any, Dict
 
-import dolphin_memory_engine
+from .inc.packages import dolphin_memory_engine
 
 import Utils
 from CommonClient import CommonContext, server_loop, gui_enabled, ClientCommandProcessor, logger, \
     get_base_parser
+from .Rom import BfBBDeltaPatch
 
 
 class CheckTypes(Flag):
@@ -52,6 +57,15 @@ PLAYER_CONTROL_OWNER = 0x803c1ce0
 # notes on free space
 # 0x817FFFF6 - 0x817FFFFF
 # around 0x8179f890-0x817fcf00 (?)
+
+# @0x817f0080 save game write injection code
+# @0x817f0400 save game read injection code
+
+
+SLOT_NAME_ADDR = 0x8028F2a0
+SEED_ADDR = SLOT_NAME_ADDR + 0x40
+# we currently write/read 0x20 bytes starting from 0x817f0000 to/from save game
+# we could extend up to 0x80 bytes or more if we move AP code from 0x817f0080 to somewhere else
 # expected received item index
 EXPECTED_INDEX_ADDR = 0x817f0000
 # delayed item
@@ -64,13 +78,15 @@ CANNON_BUTTON_COUNT_ADDR = 0x817f0007
 
 # Changes to HIPs needed
 # remove GiveCollectable link from King JF in JF04
-# remove Decrement BALLOON_COUNTER and GiveCollectable links from balloon platforms in GL01
+# remove Decrement BALLOON_COUNTER and GiveCollectable links from GL01 balloon platforms
+# remove Decrement BALLOON_COUNTER from GL01 BALLON_X_COUNT_DISP
 # remove GiveCollectable links from bc02/bc03/bc04 sec buttons
 # remove Decrement SANDMAN_COUNTER links from sm03 sandmans
 # remove GiveCollectable links from kf01/kf02/kf04 lost camper triggers
 # remove Increment MATTS_CRYSTAL_COUNTER link from kf04 powercrystals
 # remove Decrement BUTTON_COUNTER and GiveCollectable links from gy03 buttons 1-4
 # remove Decrement BUTTON_COUNTER from gy03 BUTTON_DISPs
+# remove GivePowerUp from b101 DeathCutscene and b201 RoboPatrickNPC
 
 base_id = 149000
 
@@ -102,9 +118,9 @@ SOCK_PICKUP_IDS = {
     (base_id + 100 + 23): (b'BB01', 0x7319bbfd),  # in broken house by tartar
     (base_id + 100 + 24): (b'BB01', 0x7319bbfe),  # on floating plat
     (base_id + 100 + 25): (b'BB01', 0x7319bbff),  # on copper house railing
-    (base_id + 100 + 26): (b'BB02', 0x7319bbfd),  # on windmill
-    (base_id + 100 + 27): (b'BB02', 0x7319bbfe),  # on orange rooftop/ under slide
-    (base_id + 100 + 28): (b'BB02', 0x7319bbff),  # behind lighthouse
+    (base_id + 100 + 26): (b'BB02', 0x08857ce6),  # on windmill
+    (base_id + 100 + 27): (b'BB02', 0x08857ce7),  # on orange rooftop/ under slide
+    (base_id + 100 + 28): (b'BB02', 0x08857ce8),  # behind lighthouse
     (base_id + 100 + 29): (b'BB03', 0x4d73f257),  # in lighthouse
     (base_id + 100 + 30): (b'BB04', 0x7319bbfc),  # in sea needle
     (base_id + 100 + 31): (b'GL01', 0x70848599),  # on watchtower on island
@@ -378,9 +394,9 @@ STEERING_WHEEL_PICKUP_IDS = {
     (base_id + 183 + 3): (b'BB01', 0x62f79b33),  # on house with cannon near exit
     (base_id + 183 + 4): (b'BB01', 0x62f79b34),  # on crashed boat near sea needle
     (base_id + 183 + 5): (b'BB01', 0x62f79b35),  # near hole
-    (base_id + 183 + 6): (b'BB02', 0xa8b10901),  # on pipe near start
-    (base_id + 183 + 7): (b'BB02', 0xa8b10902),  # on orange rooftop under slide
-    (base_id + 183 + 8): (b'BB02', 0xa8b10903),  # on floating plats
+    (base_id + 183 + 6): (b'BB02', 0xa8d10901),  # on pipe near start
+    (base_id + 183 + 7): (b'BB02', 0xa8d10902),  # on orange rooftop under slide
+    (base_id + 183 + 8): (b'BB02', 0xa8d10903),  # on floating plats
     (base_id + 183 + 9): (b'BB03', 0x03f22dda),  # bottom light tower
     (base_id + 183 + 10): (b'BB04', 0x62f79b31),  # east door sea needle
     (base_id + 183 + 11): (b'BB04', 0x62f79b32),  # north door sea needle
@@ -564,28 +580,29 @@ class BfBBContext(CommonContext):
             self.last_rev_index = -1
             self.included_check_types = CheckTypes.SPAT
             if 'death_link' in args['slot_data']:
-                self.update_death_link(args['slot_data']['death_link'])
-            if 'include_socks' in args['slot_data'] and args['slot_data']['include_socks'] > 0:
+                Utils.async_start(self.update_death_link(bool(args['slot_data']['death_link'])))
+            if 'include_socks' in args['slot_data'] and args['slot_data']['include_socks']:
                 self.included_check_types |= CheckTypes.SOCK
-            if 'include_skills' in args['slot_data'] and args['slot_data']['include_skills'] > 0:
+            if 'include_skills' in args['slot_data'] and args['slot_data']['include_skills']:
                 self.included_check_types |= CheckTypes.SKILLS
-            if 'include_golden_underwear' in args['slot_data'] and args['slot_data']['include_golden_underwear'] > 0:
+            if 'include_golden_underwear' in args['slot_data'] and args['slot_data']['include_golden_underwear']:
                 self.included_check_types |= CheckTypes.GOLDEN_UNDERWEAR
-            if 'include_level_items' in args['slot_data'] and args['slot_data']['include_level_items'] > 0:
+            if 'include_level_items' in args['slot_data'] and args['slot_data']['include_level_items']:
                 self.included_check_types |= CheckTypes.LEVEL_ITEMS
-            if 'include_purple_so' in args['slot_data'] and args['slot_data']['include_purple_so'] > 0:
+            if 'include_purple_so' in args['slot_data'] and args['slot_data']['include_purple_so']:
                 self.included_check_types |= CheckTypes.PURPLE_SO
         if cmd == 'ReceivedItems':
-            if args["index"] > self.last_rev_index:
+            if args["index"] >= self.last_rev_index:
                 self.last_rev_index = args["index"]
                 for item in args['items']:
                     self.items_received_2.append((item, self.last_rev_index))
                     self.last_rev_index += 1
+            self.items_received_2.sort(key=lambda v: v[1])
             self._update_item_counts(args)
 
     def on_deathlink(self, data: Dict[str, Any]) -> None:
-        _give_death(self)
         super().on_deathlink(data)
+        _give_death(self)
 
     def _update_item_counts(self, args: dict):
         self.spat_count = len([item for item in self.items_received if item.item == base_id + 0])
@@ -597,7 +614,9 @@ class BfBBContext(CommonContext):
             self.password = await self.console_input()
             return self.password
         if not self.auth:
-            await self.get_username()
+            self.awaiting_rom = True
+            logger.info('Awaiting connection to Dolphin to get player information')
+            return
 
         await self.send_connect()
 
@@ -684,7 +703,9 @@ def _give_powerup(ctx: BfBBContext, offset: int):
 
 
 def _give_death(ctx: BfBBContext):
-    dolphin_memory_engine.write_word(HEALTH_ADDR, 0)
+    if ctx.slot and dolphin_memory_engine.is_hooked() and ctx.dolphin_status == CONNECTION_CONNECTED_STATUS \
+            and check_ingame(ctx) and check_control_owner(ctx, lambda owner: owner != 0):
+        dolphin_memory_engine.write_word(HEALTH_ADDR, 0)
 
 
 def _give_level_pickup(ctx: BfBBContext, lvl_idx: int):
@@ -695,9 +716,9 @@ def _give_level_pickup(ctx: BfBBContext, lvl_idx: int):
     # ToDo: check if we need to write to CurrentLevel too
 
 
-def _give_shiny_objects(ctx: BfBBContext, amount: int):
+def _give_shiny_objects(ctx: BfBBContext, amount: int) -> object:
     cur_count = dolphin_memory_engine.read_word(SHINY_COUNT_ADDR)
-    dolphin_memory_engine.write_word(SHINY_COUNT_ADDR, max(0x01869F, cur_count + amount))
+    dolphin_memory_engine.write_word(SHINY_COUNT_ADDR, min(0x01869F, cur_count + amount))
 
 
 def _inc_delayed_item_count(ctx: BfBBContext, addr: int, val: int = 1):
@@ -850,7 +871,7 @@ def _give_item(ctx: BfBBContext, item_id: int):
         _give_level_pickup(ctx, 10)
         _inc_delayed_item_count(ctx, CANNON_BUTTON_COUNT_ADDR)
     elif item_id == base_id + 19:
-        _give_shiny_objects(ctx, 5000)
+        _give_shiny_objects(ctx, 500)
 
 
 def update_delayed_items(ctx: BfBBContext):
@@ -880,10 +901,13 @@ async def give_items(ctx: BfBBContext):
     expected_idx = dolphin_memory_engine.read_word(EXPECTED_INDEX_ADDR)
     # we need to loop some items
     for item, idx in ctx.items_received_2:
+        if check_control_owner(ctx, lambda owner: owner & 0x2 or owner & 0x8000 or owner & 0x200 or owner & 0x1):
+            return
         if expected_idx <= idx:
             item_id = item.item
             _give_item(ctx, item_id)
             dolphin_memory_engine.write_word(EXPECTED_INDEX_ADDR, idx + 1)
+            await asyncio.sleep(.01)  # wait a bit for values to update
 
 
 # ToDo: do we actually want this?
@@ -1017,22 +1041,29 @@ def _check_purple_so(ctx: BfBBContext, locations_checked: set):
     _check_objects_by_id(ctx, locations_checked, PURPLE_SO_IDS, _check_pickup_state)
 
 
+def _check_skills(ctx: BfBBContext, locations_checked: set):
+    # /miwe just check if we checked the boss spats locations
+    if (base_id + 32) in locations_checked and (base_id + 234) not in locations_checked:
+        locations_checked.add(base_id + 234)
+    if (base_id + 57) in locations_checked and (base_id + 235) not in locations_checked:
+        locations_checked.add(base_id + 235)
+
+
 async def check_locations(ctx: BfBBContext):
-    # ignore location already in server state
-    locations_checked = ctx.checked_locations.union(ctx.locations_checked)
-    _check_spats(ctx, locations_checked)
+    _check_spats(ctx, ctx.locations_checked)
     if CheckTypes.SOCK in ctx.included_check_types:
-        _check_socks(ctx, locations_checked)
+        _check_socks(ctx, ctx.locations_checked)
+    if CheckTypes.SKILLS in ctx.included_check_types:
+        _check_skills(ctx, ctx.locations_checked)
     if CheckTypes.GOLDEN_UNDERWEAR in ctx.included_check_types:
-        _check_golden_underwear(ctx, locations_checked)
+        _check_golden_underwear(ctx, ctx.locations_checked)
     if CheckTypes.LEVEL_ITEMS in ctx.included_check_types:
-        _check_level_pickups(ctx, locations_checked)
+        _check_level_pickups(ctx, ctx.locations_checked)
     if CheckTypes.PURPLE_SO in ctx.included_check_types:
-        _check_purple_so(ctx, locations_checked)
-    # ignore already in local state
-    locations_checked = locations_checked.difference(ctx.checked_locations.union(ctx.locations_checked))
+        _check_purple_so(ctx, ctx.locations_checked)
+    # ignore already in server state
+    locations_checked = ctx.locations_checked.difference(ctx.checked_locations)
     if locations_checked:
-        ctx.locations_checked = ctx.locations_checked.union(locations_checked)
         print([ctx.location_names[location] for location in locations_checked])
         await ctx.send_msgs([
             {"cmd": "LocationChecks",
@@ -1049,25 +1080,27 @@ async def check_locations(ctx: BfBBContext):
 
 async def check_death(ctx: BfBBContext):
     cur_health = dolphin_memory_engine.read_word(HEALTH_ADDR)
-    if cur_health <= 0:
-        if not ctx.has_send_death and time.time() >= ctx.last_death_link + 2:
+    if cur_health <= 0 or check_control_owner(ctx, lambda owner: owner & 0x4):
+        if not ctx.has_send_death and time.time() >= ctx.last_death_link + 3:
             ctx.has_send_death = True
             await ctx.send_death("BfBB")
     else:
         ctx.has_send_death = False
 
 
-def check_ingame(ctx: BfBBContext) -> bool:
+def check_ingame(ctx: BfBBContext, ignore_control_owner: bool = False) -> bool:
     scene_ptr = dolphin_memory_engine.read_word(CUR_SCENE_PTR_ADDR)
     if not _is_ptr_valid(scene_ptr):
         return False
     scene = dolphin_memory_engine.read_bytes(scene_ptr, 0x4)
     if scene not in valid_scenes:
         return False
-    control_owner = dolphin_memory_engine.read_word(PLAYER_CONTROL_OWNER)
-    if control_owner != 0:
-        return False
     return True
+
+
+def check_control_owner(ctx: BfBBContext, check_cb: Callable[[int], bool]) -> bool:
+    owner = dolphin_memory_engine.read_word(PLAYER_CONTROL_OWNER)
+    return check_cb(owner)
 
 
 async def dolphin_sync_task(ctx: BfBBContext):
@@ -1076,24 +1109,28 @@ async def dolphin_sync_task(ctx: BfBBContext):
         try:
             if dolphin_memory_engine.is_hooked() and ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
                 # _print_player_info(ctx)
+
                 if ctx.slot:
-                    dolphin_memory_engine.assert_hooked()
                     if not check_ingame(ctx):
                         # reset AP values when on main menu
                         # ToDo: this should be done via patch when other globals are reset
                         if _check_cur_scene(ctx, b'MNU3'):
-                            cur_val = dolphin_memory_engine.read_word(EXPECTED_INDEX_ADDR)
-                            if cur_val != 0:
-                                dolphin_memory_engine.write_word(EXPECTED_INDEX_ADDR, 0)
-                            cur_val = dolphin_memory_engine.read_word(BALLOON_KID_COUNT_ADDR)
-                            if cur_val != 0:
-                                dolphin_memory_engine.write_word(BALLOON_KID_COUNT_ADDR, 0)
+                            for i in range(0, 0x20, 0x4):
+                                cur_val = dolphin_memory_engine.read_word(EXPECTED_INDEX_ADDR + i)
+                                if cur_val != 0:
+                                    dolphin_memory_engine.write_word(EXPECTED_INDEX_ADDR + i, 0)
                         await asyncio.sleep(.1)
                         continue
+                    await check_death(ctx)
                     await give_items(ctx)
                     await check_locations(ctx)
-                    await check_death(ctx)
                     # await set_locations(ctx)
+                else:
+                    if not ctx.auth:
+                        ctx.auth = dolphin_memory_engine.read_bytes(SLOT_NAME_ADDR, 0x40).decode('utf-8').strip(
+                            '\0')
+                    if ctx.awaiting_rom:
+                        await ctx.server_auth()
                 await asyncio.sleep(1 / 120)
             else:
                 if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
@@ -1105,6 +1142,7 @@ async def dolphin_sync_task(ctx: BfBBContext):
                     if dolphin_memory_engine.read_bytes(0x80000000, 6) == b'GQPE78':
                         logger.info(CONNECTION_CONNECTED_STATUS)
                         ctx.dolphin_status = CONNECTION_CONNECTED_STATUS
+                        ctx.locations_checked = set()
                     else:
                         logger.info(CONNECTION_REFUSED_STATUS)
                         ctx.dolphin_status = CONNECTION_REFUSED_STATUS
@@ -1124,19 +1162,53 @@ async def dolphin_sync_task(ctx: BfBBContext):
             continue
 
 
-def main():
+async def patch_and_run_game(ctx: BfBBContext, patch_file):
+    try:
+        result_path = os.path.splitext(patch_file)[0] + BfBBDeltaPatch.result_file_ending
+        with zipfile.ZipFile(patch_file, 'r') as patch_archive:
+            if not BfBBDeltaPatch.check_version(patch_archive):
+                logger.error(
+                    "apbfbb version doesn't match this client.  Make sure your generator and client are the same")
+                raise Exception("apbfbb version doesn't match this client.")
+
+        shutil.copy(BfBBDeltaPatch.get_rom_path(), result_path)
+        await BfBBDeltaPatch.apply_hiphop_changes(zipfile.ZipFile(patch_file, 'r'), BfBBDeltaPatch.get_rom_path(),
+                                                  result_path)
+        await BfBBDeltaPatch.apply_binary_changes(zipfile.ZipFile(patch_file, 'r'), result_path)
+
+        print('--patching success--')
+        os.startfile(result_path)
+
+    except Exception as msg:
+        logger.info(msg, extra={'compact_gui': True})
+        ctx.gui_error('Error', msg)
+
+
+def main(connect=None, password=None, patch_file=None):
     # Text Mode to use !hint and such with games that have no text entry
     Utils.init_logging("BBfBClient")
 
+    logger.warning(f"starting {connect}, {password}, {patch_file}")
+
     options = Utils.get_options()
 
-    async def _main(args):
-        ctx = BfBBContext(args.connect, args.password)
+    async def _main(connect, password, patch_file):
+        ctx = BfBBContext(connect, password)
         ctx.server_task = asyncio.create_task(server_loop(ctx), name="ServerLoop")
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
         ctx.dolphin_sync_task = asyncio.create_task(dolphin_sync_task(ctx), name="DolphinSync")
+
+        if patch_file:
+            ext = os.path.splitext(patch_file)[1]
+            if ext == BfBBDeltaPatch.patch_file_ending:
+                logger.info("apbfbb file supplied, beginning patching process...")
+                Utils.async_start(patch_and_run_game(ctx, patch_file))
+            elif ext == BfBBDeltaPatch.result_file_ending:
+                os.startfile(patch_file)
+            else:
+                logger.warning(f"Unknown patch file extension {ext}")
 
         await ctx.exit_event.wait()
         ctx.server_address = None
@@ -1148,13 +1220,14 @@ def main():
 
     import colorama
 
-    parser = get_base_parser()
-    args = parser.parse_args()
     colorama.init()
-
-    asyncio.run(_main(args))
+    asyncio.run(_main(connect, password, patch_file))
     colorama.deinit()
 
 
 if __name__ == '__main__':
-    main()
+    parser = get_base_parser()
+    parser.add_argument('patch_file', default="", type=str, nargs="?",
+                        help='Path to an .apbfbb patch file')
+    args = parser.parse_args()
+    main(args.connect, args.password, args.patch_file)

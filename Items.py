@@ -40,7 +40,7 @@ item_table = {
     ItemNames.bubble_bowl: ItemData(base_id + 7, ItemClassification.progression),
     ItemNames.cruise_bubble: ItemData(base_id + 8, ItemClassification.progression),
     # golden underwear
-    ItemNames.golden_underwear: ItemData(base_id + 9, ItemClassification.useful),
+    ItemNames.golden_underwear: ItemData(base_id + 9, ItemClassification.progression),
     # level pickups
     ItemNames.lvl_itm_jf: ItemData(base_id + 10, ItemClassification.progression),
     ItemNames.lvl_itm_bb: ItemData(base_id + 11, ItemClassification.progression),
@@ -52,7 +52,7 @@ item_table = {
     ItemNames.lvl_itm_kf2: ItemData(base_id + 17, ItemClassification.progression),
     ItemNames.lvl_itm_gy: ItemData(base_id + 18, ItemClassification.progression),
     # shiny object rewards
-    ItemNames.so_5000: ItemData(base_id + 19, ItemClassification.useful),
+    ItemNames.so_500: ItemData(base_id + 19, ItemClassification.progression),
     # events
     ItemNames.victory: ItemData(None, ItemClassification.progression)
 }

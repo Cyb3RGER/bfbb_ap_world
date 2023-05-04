@@ -1,5 +1,23 @@
+import os
+import sys
+import zipfile
 from multiprocessing import Process
 
+world_path = os.path.join(__file__[:__file__.find('worlds') + len('worlds')], 'bfbb.apworld')
+is_ap_world = os.path.exists(world_path)
+lib_path = os.path.abspath(os.path.dirname(__file__) + './inc/')
+if is_ap_world:
+    lib_path = os.path.expandvars('%APPDATA%/bfbb_ap/')
+    with zipfile.ZipFile(world_path) as world_zip:
+        for file in world_zip.namelist():
+            if file.startswith('bfbb/inc/'):
+                world_zip.extract(file, lib_path)
+    lib_path = lib_path + 'bfbb/inc/'
+if not lib_path in sys.path:
+    sys.path.append(lib_path)
+print(sys.path)
+
+import Utils
 from BaseClasses import Item, Tutorial
 from worlds.AutoWorld import World, WebWorld
 from .Events import create_events
@@ -7,14 +25,18 @@ from .Items import item_table, BfBBItem
 from .Locations import location_table, BfBBLocation
 from .Options import bfbb_options
 from .Regions import create_regions
+from .Rom import BfBBDeltaPatch
 from .Rules import set_rules
 from worlds.LauncherComponents import Component, components, Type
 from .names import ItemNames
 
 
 def run_client():
+    print('running bfbb client')
     from .BfBBClient import main  # lazy import
-    p = Process(target=main)
+    file_types = (('BfBB Patch File', ('.apbfbb',)), ('NGC iso', ('.gcm',)),)
+    kwargs = {'patch_file': Utils.open_filename("Select .apbfbb", file_types)}
+    p = Process(target=main, kwargs=kwargs)
     p.start()
 
 
@@ -72,7 +94,7 @@ class BattleForBikiniBottom(World):
             itempool += [ItemNames.lvl_itm_kf2] * 6
             itempool += [ItemNames.lvl_itm_gy] * 4
         if self.multiworld.include_purple_so[self.player].value:
-            itempool += [ItemNames.so_5000] * 38
+            itempool += [ItemNames.so_500] * 38
         # Convert itempool into real items
         itempool = list(map(lambda name: self.create_item(name), itempool))
 
@@ -99,3 +121,16 @@ class BattleForBikiniBottom(World):
         item_data = item_table[name]
         item = BfBBItem(name, item_data.classification, item_data.id, self.player)
         return item
+
+    def generate_output(self, output_directory: str) -> None:
+        patch = BfBBDeltaPatch(path=os.path.join(output_directory,
+                                                 f"{self.multiworld.get_out_file_name_base(self.player)}{BfBBDeltaPatch.patch_file_ending}"),
+                               player=self.player,
+                               player_name=self.multiworld.player_name[self.player],
+                               include_socks=bool(self.multiworld.include_socks[self.player].value),
+                               include_skills=bool(self.multiworld.include_skills[self.player].value),
+                               include_golden_underwear=bool(
+                                   self.multiworld.include_golden_underwear[self.player].value),
+                               include_level_items=bool(self.multiworld.include_level_items[self.player].value),
+                               include_purple_so=bool(self.multiworld.include_purple_so[self.player].value))
+        patch.write()
