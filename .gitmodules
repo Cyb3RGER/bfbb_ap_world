@@ -1,6 +1,6 @@
 [submodule "IndustrialPark"]
 	path = inc/IP_src
-	url = https://github.com/Cyb3RGER/IndustrialPark/tree/IP_as_lib_for_ap
+	url = https://github.com/Cyb3RGER/IndustrialPark/
 [submodule "wwrando"]
 	path = inc/wwrando
-	url = https://github.com/Cyb3RGER/wwrando/tree/gcm
+	url = https://github.com/Cyb3RGER/wwrando/
