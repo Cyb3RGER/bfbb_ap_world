@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import sys
 import zipfile
@@ -5,13 +6,16 @@ from multiprocessing import Process
 
 world_path = os.path.join(__file__[:__file__.find('worlds') + len('worlds')], 'bfbb.apworld')
 is_ap_world = os.path.exists(world_path)
-lib_path = os.path.abspath(os.path.dirname(__file__) + './inc/')
+lib_path = os.path.abspath(os.path.dirname(__file__) + '/inc/')
 if is_ap_world:
     lib_path = os.path.expandvars('%APPDATA%/bfbb_ap/')
     with zipfile.ZipFile(world_path) as world_zip:
         for file in world_zip.namelist():
             if file.startswith('bfbb/inc/'):
-                world_zip.extract(file, lib_path)
+                try:
+                    world_zip.extract(file, lib_path)
+                except:
+                    print(f"warning: couldn't overwrite dependency: {file}")
     lib_path = lib_path + 'bfbb/inc/'
 if not lib_path in sys.path:
     sys.path.append(lib_path)
