@@ -1,9 +1,12 @@
+# ToDo
+
 - character
   - requires patch
 
-- figure out patching
-  - put slot name for validation and auth somewhere
-    - rework ap save/load code using a loop
+- client
+  - idx is not reset properly
+    - patch seed into game and save to savefile and check on 
+      client to avoid sending check location from another game
 
 - rando integration
   - placement file to rando??
