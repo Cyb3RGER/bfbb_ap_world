@@ -55,9 +55,9 @@ AP_SAVE_LOAD = {
 }
 
 SPATS_REWARD_FIX = {
-    0x7fcd4: 0x60000000,
-    0x7fcd8: 0x60000000,
-    0x7fcdc: 0x60000000,
+    0x7fcd4: 0x60000000,  # nop
+    0x7fcd8: 0x60000000,  # nop
+    0x7fcdc: 0x60000000,  # nop
 }
 
 SOCKS_REWARD_FIX = {
@@ -69,5 +69,7 @@ GOLDEN_UNDERWEAR_REWARD_FIX = {
 }
 
 LVL_ITEM_REWARD_FIX = {
-    0x7fdd0: 0x60000000
+    0x7fdcc: 0x60000000,  # nop
+    0x7fdd0: 0x60000000,  # nop
+    0x7fdd4: 0x60000000  # nop
 }
