@@ -12,7 +12,7 @@ AP_SAVE_LOAD = {
     0x2ab8e4: 0x9421fff0,  # stwu sp, -0x0010 (sp)
     0x2ab8e8: 0x7c0802a6,  # mflr r0
     0x2ab8ec: 0x90010014,  # stw  r0, 0x0014 (sp)
-    0x2ab8f0: 0x4bdb3eed,  # bl   ->0x8004300C (Write_b1__7xSerialFi)
+    0x2ab8f0: 0x4bdb3dfd,  # bl   ->0x8004300C (Write_b1__7xSerialFi)
     0x2ab8f4: 0x3dc0817f,  # lis	r14, 0x817f
     0x2ab8f8: 0x39e00000,  # li   r15, 0
     0x2ab8fc: 0x7fe3fb78,  # mr	r3, r31
