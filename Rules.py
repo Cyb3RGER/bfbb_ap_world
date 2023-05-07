@@ -56,8 +56,6 @@ skill_rules = [
         ConnectionNames.cb_b3: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) and state.has(
             ItemNames.cruise_bubble, player),
         ConnectionNames.bc01_bc02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
-        # ToDo: can we backtrack from bc02 without bubble bowl? only relevant when we have warp rando
-        # ConnectionNames.bc02_bc01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         ConnectionNames.bc02_bc03: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         ConnectionNames.bc02_bc05: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         ConnectionNames.kf04_kf05: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
@@ -65,31 +63,31 @@ skill_rules = [
     },
     # locations
     {
-        # ToDo: does cruise bubble even work here?
         LocationNames.spat_hb_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) or state.has(
             ItemNames.cruise_bubble, player),
         LocationNames.spat_hb_03: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.spat_bb_08: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
-        # ToDo: test Cruise Bubble
-        LocationNames.spat_bc_03: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
-        LocationNames.spat_bc_07: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
-        # ToDo: test Cruise Bubble
-        LocationNames.spat_bc_08: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
+        LocationNames.spat_bc_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         LocationNames.spat_kf_02: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.spat_kf_05: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.spat_kf_06: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
+        LocationNames.spat_gy_02: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
+        LocationNames.spat_gy_03: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.spat_db_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         LocationNames.sock_jf01_06: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         LocationNames.sock_jf03_02: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.sock_bb04_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.sock_gl03_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) or state.has(
             ItemNames.cruise_bubble, player),
+        LocationNames.sock_bc01_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
+        # ToDo: check in-game
         LocationNames.sock_kf01_03: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         LocationNames.sock_kf04_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
-        LocationNames.lvl_itm_bc_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
-        LocationNames.lvl_itm_bc_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
-        LocationNames.lvl_itm_bc_03: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
-        LocationNames.lvl_itm_bc_04: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
+        LocationNames.golden_under_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
+        LocationNames.golden_under_03: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
+        LocationNames.lvl_itm_kf1_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
+        LocationNames.lvl_itm_kf1_02: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
+        LocationNames.lvl_itm_kf1_03: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.lvl_itm_kf1_06: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.lvl_itm_kf2_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.lvl_itm_kf2_02: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
@@ -100,6 +98,8 @@ skill_rules = [
         LocationNames.purple_so_bb04_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.purple_so_bc01_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         LocationNames.purple_so_bc02_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
+        LocationNames.purple_so_bc02_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
+        LocationNames.purple_so_kf01_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         LocationNames.purple_so_kf04_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
     }
 ]
@@ -114,6 +114,7 @@ golden_underwear_rules = [
 lvl_itm_rules = [
     # connections
     {
+        ConnectionNames.bc02_bc05: lambda player: lambda state: state.has(ItemNames.lvl_itm_bc, player, 4),
         ConnectionNames.gy03_gy04: lambda player: lambda state: state.has(ItemNames.lvl_itm_gy, player, 4),
     },
     # locations
@@ -123,7 +124,7 @@ lvl_itm_rules = [
         LocationNames.spat_gl_03: lambda player: lambda state: state.has(ItemNames.lvl_itm_gl, player, 5),
         LocationNames.spat_rb_03: lambda player: lambda state: state.has(ItemNames.lvl_itm_rb, player, 6),
         LocationNames.spat_bc_03: lambda player: lambda state: state.has(ItemNames.lvl_itm_bc, player, 4),
-        LocationNames.spat_kf_02: lambda player: lambda state: state.has(ItemNames.lvl_itm_kf1, player, 6),
+        LocationNames.spat_kf_02: (lambda player: lambda state: state.has(ItemNames.lvl_itm_kf1, player, 6), True),
         LocationNames.spat_kf_06: lambda player: lambda state: state.has(ItemNames.lvl_itm_kf2, player, 6),
         LocationNames.spat_gy_06: lambda player: lambda state: state.has(ItemNames.lvl_itm_gy, player, 4),
         LocationNames.spat_gy_07: lambda player: lambda state: state.has(ItemNames.lvl_itm_gy, player, 4),
@@ -149,11 +150,20 @@ so_krabs_rules = [
 ]
 
 
-def _add_rules(world: MultiWorld, player: int, rules: list[dict[str, Callable[[int], CollectionRule]]]):
+def _add_rules(world: MultiWorld, player: int,
+               rules: list[dict[str, Callable[[int], CollectionRule] | tuple[Callable[[int], CollectionRule], bool]]]):
     for name, rule_factory in rules[0].items():
-        add_rule(world.get_entrance(name, player), rule_factory(player))
+        if type(rule_factory) == tuple and len(rule_factory) > 1 and rule_factory[1]:  # force override
+            rule_factory = rule_factory[0]
+            set_rule(world.get_entrance(name, player), rule_factory(player))
+        else:
+            add_rule(world.get_entrance(name, player), rule_factory(player))
     for name, rule_factory in rules[1].items():
-        add_rule(world.get_location(name, player), rule_factory(player))
+        if type(rule_factory) == tuple and len(rule_factory) > 1 and rule_factory[1]:  # force override
+            rule_factory = rule_factory[0]
+            set_rule(world.get_location(name, player), rule_factory(player))
+        else:
+            add_rule(world.get_location(name, player), rule_factory(player))
 
 
 def _set_rules(world: MultiWorld, player: int, rules: list[dict[str, Callable[[int], CollectionRule]]]):
@@ -175,5 +185,9 @@ def set_rules(world: MultiWorld, player: int):
         _add_rules(world, player, lvl_itm_rules)
     if world.include_purple_so[player].value:
         _set_rules(world, player, so_krabs_rules)  # we override krabs requirements here
+    # ToDo: figure out a better way to do this (maybe an override option per rule??)
+    if not world.include_level_items[player].value:
+        add_rule(world.get_location(LocationNames.spat_kf_02, player),
+                 lambda state: state.has(ItemNames.cruise_bubble, player))
 
     world.completion_condition[player] = lambda state: state.has("Victory", player)

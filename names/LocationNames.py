@@ -256,10 +256,10 @@ lvl_itm_kf2_03 = f"{RegionNames.kf04}: {ItemNames.lvl_itm_kf2} #3 (top near 3rd 
 lvl_itm_kf2_04 = f"{RegionNames.kf04}: {ItemNames.lvl_itm_kf2} #4 (top big room)"
 lvl_itm_kf2_05 = f"{RegionNames.kf04}: {ItemNames.lvl_itm_kf2} #5 (top tall vine room)"
 lvl_itm_kf2_06 = f"{RegionNames.kf04}: {ItemNames.lvl_itm_kf2} #6 (top last room)"
-lvl_itm_gy_01 = f"{RegionNames.gy04}: {ItemNames.lvl_itm_gy} #1 (On deck)"
-lvl_itm_gy_02 = f"{RegionNames.gy04}: {ItemNames.lvl_itm_gy} #2 (On middle mast)"
-lvl_itm_gy_03 = f"{RegionNames.gy04}: {ItemNames.lvl_itm_gy} #3 (On front mast)"
-lvl_itm_gy_04 = f"{RegionNames.gy04}: {ItemNames.lvl_itm_gy} #4 (Near steering wheel)"
+lvl_itm_gy_01 = f"{RegionNames.gy03}: {ItemNames.lvl_itm_gy} #1 (On deck)"
+lvl_itm_gy_02 = f"{RegionNames.gy03}: {ItemNames.lvl_itm_gy} #2 (On middle mast)"
+lvl_itm_gy_03 = f"{RegionNames.gy03}: {ItemNames.lvl_itm_gy} #3 (On front mast)"
+lvl_itm_gy_04 = f"{RegionNames.gy03}: {ItemNames.lvl_itm_gy} #4 (Near steering wheel)"
 
 # purple SOs
 purple_so_hub3_01 = f"{RegionNames.hub3}: {ItemNames.so_purple} (Behind Chum Bucket)"
