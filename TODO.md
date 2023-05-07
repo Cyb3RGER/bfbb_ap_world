@@ -1,8 +1,5 @@
 # ToDo
 
-- lvl items
-  - fix king jellyfish death check being missable 
-
 - character
   - requires patch
 

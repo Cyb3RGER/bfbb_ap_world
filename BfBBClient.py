@@ -385,8 +385,8 @@ GOLDEN_UNDERWEAR_IDS = {
     (base_id + 181): (b'HB01', 0x3E3DE78),
     (base_id + 182): (b'HB01', 0x3E3DE79)
 }
-KING_JF_COUNTER_ID = {
-    (base_id + 183 + 0): (b'JF04', 0xfba20dcd),
+KING_JF_DISP_ID = {
+    (base_id + 183 + 0): (b'JF04', 0xb4e7cb55),
 }
 STEERING_WHEEL_PICKUP_IDS = {
     (base_id + 183 + 1): (b'BB01', 0x62f79b31),  # on tikis near start
@@ -980,11 +980,15 @@ def _check_counter(ctx: BfBBContext, obj_ptr: int, target_cb: Callable):
     return target_cb(counter)
 
 
-def _check_trigger_state(ctx: BfBBContext, obj_ptr: int):
+def _check_base_inactive(ctx: BfBBContext, obj_ptr: int):
     if not _is_ptr_valid(obj_ptr + 0x6):
         return False
     state = dolphin_memory_engine.read_bytes(obj_ptr + 0x6, 0x2)
     return state[1] & 0x1 == 0
+
+
+def _check_base_active(ctx: BfBBContext, obj_ptr: int):
+    return not _check_base_inactive(ctx, obj_ptr)
 
 
 def _check_objects_by_id(ctx: BfBBContext, locations_checked: set, id_table: dict, check_cb: Callable):
@@ -1025,14 +1029,13 @@ def _check_golden_underwear(ctx: BfBBContext, locations_checked: set):
 
 
 def _check_level_pickups(ctx: BfBBContext, locations_checked: set):
-    _check_objects_by_id(ctx, locations_checked, KING_JF_COUNTER_ID,
-                         lambda ctx, ptr: _check_counter(ctx, ptr, lambda cnt: cnt <= 1))
+    _check_objects_by_id(ctx, locations_checked, KING_JF_DISP_ID, _check_base_active)
     _check_objects_by_id(ctx, locations_checked, STEERING_WHEEL_PICKUP_IDS, _check_pickup_state)
     _check_objects_by_id(ctx, locations_checked, BALLOON_KID_PLAT_IDS, _check_platform_state)
     _check_objects_by_id(ctx, locations_checked, ART_WORK_IDS, _check_pickup_state)
     _check_objects_by_id(ctx, locations_checked, OVERRIDE_BUTTON_IDS, _check_button_state)
     _check_objects_by_id(ctx, locations_checked, SANDMAN_DSTR_IDS, _check_destructible_state)
-    _check_objects_by_id(ctx, locations_checked, LOST_CAMPER_TRIG_IDS, _check_trigger_state)
+    _check_objects_by_id(ctx, locations_checked, LOST_CAMPER_TRIG_IDS, _check_base_inactive)
     _check_objects_by_id(ctx, locations_checked, POWERCRYSTAL_PICKUP_IDS, _check_pickup_state)
     _check_objects_by_id(ctx, locations_checked, CANNON_BUTTON_IDS, _check_button_state)
 
