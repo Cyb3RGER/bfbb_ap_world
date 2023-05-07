@@ -9,10 +9,7 @@ from typing import Any
 
 import Utils
 from worlds.Files import AutoPatchRegister, APContainer
-from . import Patches, lib_path
-from packages.pythonnet import load
-load()
-import clr
+from . import Patches
 from .inc.wwrando.wwlib.gcm import GCM
 
 BFBB_HASH = "9e18f9a0032c4f3092945dc38a6517d3"
@@ -63,7 +60,43 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         super(BfBBDeltaPatch, self).read_contents(opened_zipfile)
 
     @classmethod
+    def get_bool(cls, opened_zipfile: zipfile.ZipFile, name: str):
+        return bool.from_bytes(opened_zipfile.read(name), "little")
+
+    @classmethod
+    def get_manifest(cls, opened_zipfile: zipfile.ZipFile):
+        with opened_zipfile.open("archipelago.json", "r") as f:
+            manifest = json.load(f)
+        return manifest
+
+    @classmethod
     async def apply_hiphop_changes(cls, opened_zipfile: zipfile.ZipFile, source_iso, dest_iso):
+        include_skills = BfBBDeltaPatch.get_bool(opened_zipfile, "include_skills")
+        include_level_items = BfBBDeltaPatch.get_bool(opened_zipfile, "include_level_items")
+        if not include_skills and not include_level_items:
+            return
+        # extract dependencies need to patch with IP
+        world_path = os.path.join(__file__[:__file__.find('worlds') + len('worlds')], 'bfbb.apworld')
+        is_ap_world = os.path.exists(world_path)
+        lib_path = os.path.abspath(os.path.dirname(__file__) + '/inc/')
+        if is_ap_world:
+            lib_path = os.path.expandvars('%APPDATA%/bfbb_ap/')
+            with zipfile.ZipFile(world_path) as world_zip:
+                for file in world_zip.namelist():
+                    if file.startswith('bfbb/inc/packages') or file.startswith('bfbb/inc/IP'):
+                        try:
+                            world_zip.extract(file, lib_path)
+                        except:
+                            print(f"warning: couldn't overwrite dependency: {file}")
+            lib_path = lib_path + 'bfbb/inc/'
+        if not lib_path in sys.path:
+            sys.path.append(lib_path)
+        print(sys.path)
+        # setup pythonnet
+        from packages.pythonnet import load
+        load()
+        import clr
+        # extract ISO content
         extraction_temp_dir = tempfile.TemporaryDirectory()
         extraction_path = extraction_temp_dir.name
         gcm = GCM(source_iso)
@@ -78,6 +111,7 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
                 break
         print('--extraction done--')
         print('--making changes--')
+        # load and setup IP libs
         clr.AddReference(os.path.abspath(lib_path + '/IP/IndustrialPark.exe'))
         clr.AddReference(os.path.abspath(lib_path + '/IP/HipHopFile.dll'))
         from HipHopFile import Platform, Game
@@ -283,9 +317,9 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
             },
         }
         files_to_check: dict[str, dict[int, list[LinkData]]] = {}
-        if bool.from_bytes(opened_zipfile.read("include_skills"), "little"):
+        if include_skills:
             files_to_check.update(files_to_check_skills)
-        if bool.from_bytes(opened_zipfile.read("include_level_items"), "little"):
+        if include_level_items:
             files_to_check.update(files_to_check_lvl_items)
         HexUIntTypeConverter.Legacy = True
         editor_funcs = ArchiveEditorFunctions()
@@ -293,6 +327,7 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         editor_funcs.Platform = Platform.GameCube
         editor_funcs.Game = Game.BFBB
         editor_funcs.standalone = True
+        # make changes with IP
         for name, assets_to_check in files_to_check.items():
             editor_funcs.OpenFile(extraction_path + f'/files/{name[:-2]}/{name}.HIP', False, Platform.Unknown)
             for id, links_to_check in assets_to_check.items():
@@ -311,7 +346,7 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
                 editor_funcs.assetDictionary[id].Links = [link for link in links if link not in links_to_remove]
             editor_funcs.Save()
         print('--done making changes--')
-
+        # repack ISO (as gcm for better distinction)
         print('--repacking--')
         num = gcm.import_all_files_from_disk(input_directory=extraction_path)
         generator = gcm.export_disc_to_iso_with_changed_files(dest_iso)
@@ -321,23 +356,35 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
             if files_done == -1:
                 break
         print('--repacking done--')
+        # clean up
         extraction_temp_dir.cleanup()
 
     @classmethod
     async def apply_binary_changes(cls, opened_zipfile: zipfile.ZipFile, iso):
         print('--binary patching--')
+        # always apply these patches
         patches = [Patches.AP_SAVE_LOAD, Patches.SPATS_REWARD_FIX]
-        if bool.from_bytes(opened_zipfile.read("include_socks"), "little"):
-            patches += [Patches.SOCKS_REWARD_FIX]
-        if bool.from_bytes(opened_zipfile.read("include_golden_underwear"), "little"):
-            patches += [Patches.GOLDEN_UNDERWEAR_REWARD_FIX]
-        if bool.from_bytes(opened_zipfile.read("include_level_items"), "little"):
-            patches += [Patches.LVL_ITEM_REWARD_FIX]
-        with opened_zipfile.open("archipelago.json", "r") as f:
-            manifest = json.load(f)
+        # get slot name
+        manifest = BfBBDeltaPatch.get_manifest(opened_zipfile)
         slot_name = manifest["player_name"]
+        slot_name_bytes = slot_name.encode('utf-8')
         slot_name_offset = 0x2AB980
+        # conditional patches
+        include_socks = BfBBDeltaPatch.get_bool(opened_zipfile, "include_socks")
+        include_golden_underwear = BfBBDeltaPatch.get_bool(opened_zipfile, "include_golden_underwear")
+        include_level_items = BfBBDeltaPatch.get_bool(opened_zipfile, "include_level_items")
+        if include_socks:
+            patches += [Patches.SOCKS_REWARD_FIX]
+        if include_golden_underwear:
+            patches += [Patches.GOLDEN_UNDERWEAR_REWARD_FIX]
+        if include_level_items:
+            patches += [Patches.LVL_ITEM_REWARD_FIX]
         with open(iso, "rb+") as stream:
+            # write slot name
+            print(f"writing slot_name {slot_name} to 0x{slot_name_offset:x} ({slot_name_bytes})")
+            stream.seek(slot_name_offset, 0)
+            stream.write(slot_name_bytes)
+            # write patches
             for patch in patches:
                 print(f"applying patch {patches.index(patch) + 1}/{len(patches)}")
                 for addr, val in patch.items():
@@ -346,10 +393,6 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
                         stream.write(val)
                     else:
                         stream.write(val.to_bytes(0x4, "big"))
-            slot_name_bytes = slot_name.encode('utf-8')
-            print(f"writing slot_name {slot_name} to 0x{slot_name_offset:x} ({slot_name_bytes})")
-            stream.seek(slot_name_offset, 0)
-            stream.write(slot_name_bytes)
         print('--binary patching done--')
 
     @classmethod
