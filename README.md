@@ -2,6 +2,10 @@
 
 Battle for Bikini Bottom [Archipelago](https://archipelago.gg/) world
 
+## Running from source
+
+Clone this repo with submodules into the worlds folder for your AP source.
+
 ## Installation
 
 Place the .apworld in ``/lib/worlds/`` in your AP installation.
