@@ -4,8 +4,9 @@
 
 - [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) v0.4.1 or higher. Make sure to install the Generator.
 - [This AP world](https://github.com/Cyb3RGER/bfbb_ap_world/releases)
+- Microsoft .NET Framework 4.8 or higher
 - [Dolphin](https://dolphin-emu.org/download/)
-- Your US ISO of Battle for Bikini Bottom, probably
+- Your US Version of Battle for Bikini Bottom, probably
   named ``Nickelodeon SpongeBob SquarePants - Battle for Bikini Bottom (USA).iso``.
 
 ## Installation Procedures
