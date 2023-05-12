@@ -10,10 +10,12 @@
 
 ## Installation Procedures
 
-Place the bfbb.apworld in ``lib/worlds/`` of your AP installation.
-Place the ISO in the root folder of your AP installation and make sure it's
+- Place ``bfbb.apworld`` in ``lib/worlds/`` of your AP installation.
+- Place the included ``.pyd`` files in ``lib/`` of your AP installation.
+- Place the ISO in the root folder of your AP installation and make sure it's
 named ``Nickelodeon SpongeBob SquarePants - Battle for Bikini Bottom (USA).iso``.
-Form more information about .apworlds see [here](https://github.com/ArchipelagoMW/Archipelago/blob/main/docs/apworld%20specification.md)
+
+For more information about .apworlds see [here](https://github.com/ArchipelagoMW/Archipelago/blob/main/docs/apworld%20specification.md)
 
 ## Create a Config (.yaml) File
 
