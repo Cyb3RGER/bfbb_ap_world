@@ -5,6 +5,9 @@ Battle for Bikini Bottom [Archipelago](https://archipelago.gg/) world
 ## Running from source
 
 Clone this repo with submodules into the worlds folder for your AP source.
+Install py_dolphin_memory_engine and pythonnet via pip:
+  - pip install dolphin-memory-engine
+  - pip install pythonnet
 
 ## Installation
 
