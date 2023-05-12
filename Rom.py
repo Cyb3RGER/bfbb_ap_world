@@ -28,11 +28,13 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         self.include_golden_underwear: int = kwargs['include_golden_underwear']
         self.include_level_items: int = kwargs['include_level_items']
         self.include_purple_so: int = kwargs['include_purple_so']
+        self.seed: bytes = kwargs['seed']
         del kwargs['include_socks']
         del kwargs['include_skills']
         del kwargs['include_golden_underwear']
         del kwargs['include_level_items']
         del kwargs['include_purple_so']
+        del kwargs['seed']
         super(BfBBDeltaPatch, self).__init__(*args, **kwargs)
 
     def write_contents(self, opened_zipfile: zipfile.ZipFile):
@@ -55,6 +57,11 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         opened_zipfile.writestr("include_purple_so",
                                 self.include_purple_so.to_bytes(1, "little"),
                                 compress_type=zipfile.ZIP_STORED)
+        m = hashlib.md5()
+        m.update(self.seed)
+        opened_zipfile.writestr("seed",
+                                m.digest(),
+                                compress_type=zipfile.ZIP_STORED)
 
     def read_contents(self, opened_zipfile: zipfile.ZipFile) -> None:
         super(BfBBDeltaPatch, self).read_contents(opened_zipfile)
@@ -64,10 +71,14 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         return bool.from_bytes(opened_zipfile.read(name), "little")
 
     @classmethod
-    def get_manifest(cls, opened_zipfile: zipfile.ZipFile):
+    def get_manifest_json(cls, opened_zipfile: zipfile.ZipFile):
         with opened_zipfile.open("archipelago.json", "r") as f:
             manifest = json.load(f)
         return manifest
+
+    @classmethod
+    def get_seed_hash(cls, opened_zipfile: zipfile.ZipFile):
+        return opened_zipfile.read("seed")
 
     @classmethod
     async def apply_hiphop_changes(cls, opened_zipfile: zipfile.ZipFile, source_iso, dest_iso):
@@ -91,7 +102,7 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
             lib_path = lib_path + 'bfbb/inc/'
         if not lib_path in sys.path:
             sys.path.append(lib_path)
-        print(sys.path)
+        # print(sys.path)
         # setup pythonnet
         from packages.pythonnet import load
         load()
@@ -362,13 +373,15 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
     @classmethod
     async def apply_binary_changes(cls, opened_zipfile: zipfile.ZipFile, iso):
         print('--binary patching--')
-        # always apply these patches
-        patches = [Patches.AP_SAVE_LOAD, Patches.SPATS_REWARD_FIX]
-        # get slot name
-        manifest = BfBBDeltaPatch.get_manifest(opened_zipfile)
+        # get slot name and seed hash
+        manifest = BfBBDeltaPatch.get_manifest_json(opened_zipfile)
         slot_name = manifest["player_name"]
         slot_name_bytes = slot_name.encode('utf-8')
         slot_name_offset = 0x2AB980
+        seed_hash = BfBBDeltaPatch.get_seed_hash(opened_zipfile)
+        seed_hash_offset = slot_name_offset + 0x40
+        # always apply these patches
+        patches = [Patches.AP_SAVE_LOAD, Patches.SPATS_REWARD_FIX]
         # conditional patches
         include_socks = BfBBDeltaPatch.get_bool(opened_zipfile, "include_socks")
         include_golden_underwear = BfBBDeltaPatch.get_bool(opened_zipfile, "include_golden_underwear")
@@ -380,10 +393,6 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         if include_level_items:
             patches += [Patches.LVL_ITEM_REWARD_FIX]
         with open(iso, "rb+") as stream:
-            # write slot name
-            print(f"writing slot_name {slot_name} to 0x{slot_name_offset:x} ({slot_name_bytes})")
-            stream.seek(slot_name_offset, 0)
-            stream.write(slot_name_bytes)
             # write patches
             for patch in patches:
                 print(f"applying patch {patches.index(patch) + 1}/{len(patches)}")
@@ -393,6 +402,13 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
                         stream.write(val)
                     else:
                         stream.write(val.to_bytes(0x4, "big"))
+            # write slot name
+            print(f"writing slot_name {slot_name} to 0x{slot_name_offset:x} ({slot_name_bytes})")
+            stream.seek(slot_name_offset, 0)
+            stream.write(slot_name_bytes)
+            print(f"writing seed_hash {seed_hash} to 0x{seed_hash_offset:x}")
+            stream.seek(seed_hash_offset, 0)
+            stream.write(seed_hash)
         print('--binary patching done--')
 
     @classmethod

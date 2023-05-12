@@ -27,7 +27,9 @@ class CheckTypes(Flag):
     PURPLE_SO = 32
 
 
-CONNECTION_REFUSED_STATUS = "Dolphin Connection refused due to invalid Game. Please load the US Version of BfBB."
+CONNECTION_REFUSED_GAME_STATUS = "Dolphin Connection refused due to invalid Game. Please load the US Version of BfBB."
+CONNECTION_REFUSED_SAVE_STATUS = "Dolphin Connection refused due to invalid Save. " \
+                                 "Please make sure you loaded a save file used on this slot and seed."
 CONNECTION_LOST_STATUS = "Dolphin Connection was lost. Please restart your emulator and make sure BfBB is running."
 CONNECTION_CONNECTED_STATUS = "Dolphin Connected"
 CONNECTION_INITIAL_STATUS = "Dolphin Connection has not been initiated"
@@ -73,6 +75,8 @@ BALLOON_KID_COUNT_ADDR = 0x817f0004
 SANDMAN_COUNT_ADDR = 0x817f0005
 POWER_CRYSTAL_COUNT_ADDR = 0x817f0006
 CANNON_BUTTON_COUNT_ADDR = 0x817f0007
+SAVED_SLOT_NAME_ADDR = 0x817f0020
+SAVED_SEED_ADDR = SAVED_SLOT_NAME_ADDR + 0x40
 # some custom code at 0x817f0080
 
 
@@ -138,8 +142,8 @@ SOCK_PICKUP_IDS = {
     (base_id + 100 + 43): (b'RB01', 0xa17bd221),  # on rock
     (base_id + 100 + 44): (b'RB01', 0xa17bd222),  # near slide
     (base_id + 100 + 45): (b'RB02', 0xa122b810),  # near exit ledge
-    (base_id + 100 + 46): (b'RB02', 0xa122b810),  # midway right ledge
-    (base_id + 100 + 47): (b'RB02', 0xa122b810),  # on entrance
+    (base_id + 100 + 46): (b'RB02', 0xa122b811),  # midway right ledge
+    (base_id + 100 + 47): (b'RB02', 0xa122b812),  # on entrance
     (base_id + 100 + 48): (b'RB03', 0x7b0c4887),  # bungee
     (base_id + 100 + 49): (b'RB03', 0x7b0c4888),  # near dupli
     (base_id + 100 + 50): (b'RB03', 0x7b0c4889),  # button under laser plat
@@ -575,9 +579,14 @@ class BfBBContext(CommonContext):
         self.has_send_death = False
         self.last_death_link_send = time.time()
 
+    async def disconnect(self, allow_autoreconnect: bool = False):
+        self.auth = None
+        await super().disconnect(allow_autoreconnect)
+
     def on_package(self, cmd: str, args: dict):
         if cmd == 'Connected':
             self.last_rev_index = -1
+            self.items_received_2 = []
             self.included_check_types = CheckTypes.SPAT
             if 'death_link' in args['slot_data']:
                 Utils.async_start(self.update_death_link(bool(args['slot_data']['death_link'])))
@@ -614,6 +623,8 @@ class BfBBContext(CommonContext):
             self.password = await self.console_input()
             return self.password
         if not self.auth:
+            if self.awaiting_rom:
+                return
             self.awaiting_rom = True
             logger.info('Awaiting connection to Dolphin to get player information')
             return
@@ -704,7 +715,7 @@ def _give_powerup(ctx: BfBBContext, offset: int):
 
 def _give_death(ctx: BfBBContext):
     if ctx.slot and dolphin_memory_engine.is_hooked() and ctx.dolphin_status == CONNECTION_CONNECTED_STATUS \
-            and check_ingame(ctx) and check_control_owner(ctx, lambda owner: owner != 0):
+            and check_ingame(ctx) and check_control_owner(ctx, lambda owner: owner == 0):
         dolphin_memory_engine.write_word(HEALTH_ADDR, 0)
 
 
@@ -840,38 +851,49 @@ def _print_player_info(ctx: BfBBContext):
 
 
 def _give_item(ctx: BfBBContext, item_id: int):
-    if item_id == base_id:
-        _give_spat(ctx)
-    elif item_id == base_id + 1:
-        _give_sock(ctx)
-    elif item_id == base_id + 7:
-        _give_powerup(ctx, 0)
-    elif item_id == base_id + 8:
-        _give_powerup(ctx, 1)
-    elif item_id == base_id + 9:
-        _give_golden_underwear(ctx)
-    elif item_id == base_id + 10:
-        _give_level_pickup(ctx, 1)
-    elif item_id == base_id + 11:
-        _give_level_pickup(ctx, 2)
-    elif item_id == base_id + 12:
-        _give_level_pickup(ctx, 3)
-        _inc_delayed_item_count(ctx, BALLOON_KID_COUNT_ADDR)
-    elif item_id == base_id + 13:
-        _give_level_pickup(ctx, 5)
-    elif item_id == base_id + 14:
-        _give_level_pickup(ctx, 6)
-    elif item_id == base_id + 15:
-        _inc_delayed_item_count(ctx, SANDMAN_COUNT_ADDR)
-    elif item_id == base_id + 16:
-        _give_level_pickup(ctx, 9)
-    elif item_id == base_id + 17:
-        _inc_delayed_item_count(ctx, POWER_CRYSTAL_COUNT_ADDR)
-    elif item_id == base_id + 18:
-        _give_level_pickup(ctx, 10)
-        _inc_delayed_item_count(ctx, CANNON_BUTTON_COUNT_ADDR)
-    elif item_id == base_id + 19:
-        _give_shiny_objects(ctx, 500)
+    match(item_id - base_id):
+        case 0:
+            _give_spat(ctx)
+        case 1:
+            _give_sock(ctx)
+        case 2:
+            _give_shiny_objects(ctx, 100)
+        case 3:
+            _give_shiny_objects(ctx, 250)
+        case 4:
+            _give_shiny_objects(ctx, 500)
+        case 5:
+            _give_shiny_objects(ctx, 750)
+        case 6:
+            _give_shiny_objects(ctx, 1000)
+        case 7:
+            _give_powerup(ctx, 0)
+        case 8:
+            _give_powerup(ctx, 1)
+        case 9:
+            _give_golden_underwear(ctx)
+        case 10:
+            _give_level_pickup(ctx, 1)
+        case 11:
+            _give_level_pickup(ctx, 2)
+        case 12:
+            _give_level_pickup(ctx, 3)
+            _inc_delayed_item_count(ctx, BALLOON_KID_COUNT_ADDR)
+        case 13:
+            _give_level_pickup(ctx, 5)
+        case 14:
+            _give_level_pickup(ctx, 6)
+        case 15:
+            _inc_delayed_item_count(ctx, SANDMAN_COUNT_ADDR)
+        case 16:
+            _give_level_pickup(ctx, 9)
+        case 17:
+            _inc_delayed_item_count(ctx, POWER_CRYSTAL_COUNT_ADDR)
+        case 18:
+            _give_level_pickup(ctx, 10)
+            _inc_delayed_item_count(ctx, CANNON_BUTTON_COUNT_ADDR)
+        case _:
+            logger.warning(f"Received unknown item with id {item_id}")
 
 
 def update_delayed_items(ctx: BfBBContext):
@@ -1106,23 +1128,45 @@ def check_control_owner(ctx: BfBBContext, check_cb: Callable[[int], bool]) -> bo
     return check_cb(owner)
 
 
+def validate_save(ctx: BfBBContext) -> bool:
+    saved_slot_bytes = dolphin_memory_engine.read_bytes(SAVED_SLOT_NAME_ADDR, 0x40).strip(b'\0')
+    slot_bytes = dolphin_memory_engine.read_bytes(SLOT_NAME_ADDR, 0x40).strip(b'\0')
+    saved_seed_bytes = dolphin_memory_engine.read_bytes(SAVED_SEED_ADDR, 0x10).strip(b'\0')
+    seed_bytes = dolphin_memory_engine.read_bytes(SEED_ADDR, 0x10).strip(b'\0')
+    if len(slot_bytes) > 0 and len(seed_bytes) > 0:
+        if len(saved_slot_bytes) == 0 and len(saved_seed_bytes) == 0:
+            # write info to save
+            dolphin_memory_engine.write_bytes(SAVED_SLOT_NAME_ADDR, slot_bytes)
+            dolphin_memory_engine.write_bytes(SAVED_SEED_ADDR, seed_bytes)
+            return True
+        elif slot_bytes == saved_slot_bytes and seed_bytes == saved_seed_bytes:
+            return True
+    return False
+
+
 async def dolphin_sync_task(ctx: BfBBContext):
     logger.info("Starting Dolphin connector. Use /dolphin for status information")
     while not ctx.exit_event.is_set():
         try:
             if dolphin_memory_engine.is_hooked() and ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
+                if not check_ingame(ctx):
+                    # reset AP values when on main menu
+                    # ToDo: this should be done via patch when other globals are reset
+                    if _check_cur_scene(ctx, b'MNU3'):
+                        for i in range(0, 0x80, 0x4):
+                            cur_val = dolphin_memory_engine.read_word(EXPECTED_INDEX_ADDR + i)
+                            if cur_val != 0:
+                                dolphin_memory_engine.write_word(EXPECTED_INDEX_ADDR + i, 0)
+                    await asyncio.sleep(.1)
+                    continue
                 # _print_player_info(ctx)
-
                 if ctx.slot:
-                    if not check_ingame(ctx):
-                        # reset AP values when on main menu
-                        # ToDo: this should be done via patch when other globals are reset
-                        if _check_cur_scene(ctx, b'MNU3'):
-                            for i in range(0, 0x20, 0x4):
-                                cur_val = dolphin_memory_engine.read_word(EXPECTED_INDEX_ADDR + i)
-                                if cur_val != 0:
-                                    dolphin_memory_engine.write_word(EXPECTED_INDEX_ADDR + i, 0)
-                        await asyncio.sleep(.1)
+                    if not validate_save(ctx):
+                        logger.info(CONNECTION_REFUSED_SAVE_STATUS)
+                        ctx.dolphin_status = CONNECTION_REFUSED_SAVE_STATUS
+                        dolphin_memory_engine.un_hook()
+                        await ctx.disconnect()
+                        await asyncio.sleep(5)
                         continue
                     await check_death(ctx)
                     await give_items(ctx)
@@ -1147,13 +1191,14 @@ async def dolphin_sync_task(ctx: BfBBContext):
                         ctx.dolphin_status = CONNECTION_CONNECTED_STATUS
                         ctx.locations_checked = set()
                     else:
-                        logger.info(CONNECTION_REFUSED_STATUS)
-                        ctx.dolphin_status = CONNECTION_REFUSED_STATUS
+                        logger.info(CONNECTION_REFUSED_GAME_STATUS)
+                        ctx.dolphin_status = CONNECTION_REFUSED_GAME_STATUS
                         dolphin_memory_engine.un_hook()
                         await asyncio.sleep(1)
                 else:
                     logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
+                    await ctx.disconnect()
                     await asyncio.sleep(5)
                     continue
         except Exception:
@@ -1161,6 +1206,7 @@ async def dolphin_sync_task(ctx: BfBBContext):
             logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
             logger.error(traceback.format_exc())
             ctx.dolphin_status = CONNECTION_LOST_STATUS
+            await ctx.disconnect()
             await asyncio.sleep(5)
             continue
 

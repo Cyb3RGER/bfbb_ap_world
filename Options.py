@@ -1,8 +1,16 @@
 import typing
-from Options import Option, Toggle, DeathLink
+from Options import Option, Toggle, DeathLink, Range
 
 
 # ToDo
+
+class AvailableSpatulas(Range):
+    """Amount of available golden spatulas"""
+    display_name = "Available Spatulas"
+    range_start = 75
+    range_end = 100
+    default = 100
+
 
 class IncludeSocks(Toggle):
     """Include Socks as AP Locations/Items"""
@@ -35,10 +43,12 @@ class IncludePurpleSO(Toggle):
 
 
 bfbb_options: typing.Dict[str, type(Option)] = {
+    "available_spatulas": AvailableSpatulas,
     "include_socks": IncludeSocks,
     "include_skills": IncludeSkills,
     "include_golden_underwear": IncludeGoldenUnderwear,
     "include_level_items": IncludeLevelItems,
     "include_purple_so": IncludePurpleSO,
     "death_link": DeathLink,
+
 }

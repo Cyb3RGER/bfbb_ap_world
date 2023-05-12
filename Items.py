@@ -30,12 +30,12 @@ item_table = {
     ItemNames.spat: ItemData(base_id + 0, ItemClassification.progression),
     # socks
     ItemNames.sock: ItemData(base_id + 1, ItemClassification.progression),
-    # shiny objects (unused rn)
-    ItemNames.so_red: ItemData(base_id + 2, ItemClassification.filler),
-    ItemNames.so_yellow: ItemData(base_id + 3, ItemClassification.filler),
-    ItemNames.so_green: ItemData(base_id + 4, ItemClassification.filler),
-    ItemNames.so_blue: ItemData(base_id + 5, ItemClassification.filler),
-    ItemNames.so_purple: ItemData(base_id + 6, ItemClassification.filler),
+    # shiny objects rewards
+    ItemNames.so_100: ItemData(base_id + 2, ItemClassification.filler),
+    ItemNames.so_250: ItemData(base_id + 3, ItemClassification.filler),
+    ItemNames.so_500: ItemData(base_id + 4, ItemClassification.progression_skip_balancing),
+    ItemNames.so_750: ItemData(base_id + 5, ItemClassification.progression_skip_balancing),
+    ItemNames.so_1000: ItemData(base_id + 6, ItemClassification.progression_skip_balancing),
     # skills
     ItemNames.bubble_bowl: ItemData(base_id + 7, ItemClassification.progression),
     ItemNames.cruise_bubble: ItemData(base_id + 8, ItemClassification.progression),
@@ -51,8 +51,6 @@ item_table = {
     ItemNames.lvl_itm_kf1: ItemData(base_id + 16, ItemClassification.progression),
     ItemNames.lvl_itm_kf2: ItemData(base_id + 17, ItemClassification.progression),
     ItemNames.lvl_itm_gy: ItemData(base_id + 18, ItemClassification.progression),
-    # shiny object rewards
-    ItemNames.so_500: ItemData(base_id + 19, ItemClassification.progression),
     # events
     ItemNames.victory: ItemData(None, ItemClassification.progression)
 }

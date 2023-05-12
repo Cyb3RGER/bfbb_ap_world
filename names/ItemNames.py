@@ -8,6 +8,7 @@ cruise_bubble = "Cruise Bubble"
 # golden underwear
 golden_underwear = "Golden Underwear"
 # level pickups
+lvl_itm = "Level Items"
 lvl_itm_jf = "King Jellyfish Jelly"
 lvl_itm_bb = "Steering Wheel"
 lvl_itm_gl = "Balloon Kid"
@@ -24,7 +25,11 @@ so_green = "Green Shiny Object"
 so_blue = "Blue Shiny Object"
 so_purple = "Purple Shiny Object"
 # shiny objects (AP items)
+so_100 = "100 Shiny Objects"
+so_250 = "250 Shiny Objects"
 so_500 = "500 Shiny Objects"
+so_750 = "750 Shiny Objects"
+so_1000 = "1000 Shiny Objects"
 # characters
 char_pat = "Patrick"
 char_sandy = "Sandy"

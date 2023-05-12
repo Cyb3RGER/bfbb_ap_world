@@ -1,5 +1,6 @@
 import multiprocessing
 import os
+import random
 import sys
 import zipfile
 from multiprocessing import Process
@@ -60,10 +61,13 @@ class BattleForBikiniBottom(World):
         pass
 
     def create_items(self):
+        filler_items = [ItemNames.so_100, ItemNames.so_250]
+        filler_weights = [1, 2]
         # Generate item pool
-        itempool = [
-                       ItemNames.spat
-                   ] * 100
+        itempool = [ItemNames.spat] * self.multiworld.available_spatulas[self.player].value
+        if self.multiworld.available_spatulas[self.player].value - 100 > 0:
+            itempool += random.choices(filler_items, weights=filler_weights,
+                                       k=self.multiworld.available_spatulas[self.player].value - 100)
         if self.multiworld.include_socks[self.player].value:
             itempool += [ItemNames.sock] * 80
         if self.multiworld.include_skills[self.player].value:
@@ -81,7 +85,18 @@ class BattleForBikiniBottom(World):
             itempool += [ItemNames.lvl_itm_kf2] * 6
             itempool += [ItemNames.lvl_itm_gy] * 4
         if self.multiworld.include_purple_so[self.player].value:
-            itempool += [ItemNames.so_500] * 38
+            so_items = [ItemNames.so_100, ItemNames.so_250, ItemNames.so_500, ItemNames.so_750, ItemNames.so_1000]
+            weights = [1, 2, 5, 3, 2]
+            itempool += random.choices(so_items, weights=weights, k=38)
+
+        # adjust for starting inv prog. items
+        k = 0
+        for item in self.multiworld.precollected_items[self.player]:
+            if item.name in itempool and item.advancement:
+                itempool.remove(item.name)
+                k = k + 1
+        if k > 0:
+            itempool += random.choices(filler_items, weights=filler_weights, k=k)
         # Convert itempool into real items
         itempool = list(map(lambda name: self.create_item(name), itempool))
 
@@ -119,5 +134,7 @@ class BattleForBikiniBottom(World):
                                include_golden_underwear=bool(
                                    self.multiworld.include_golden_underwear[self.player].value),
                                include_level_items=bool(self.multiworld.include_level_items[self.player].value),
-                               include_purple_so=bool(self.multiworld.include_purple_so[self.player].value))
+                               include_purple_so=bool(self.multiworld.include_purple_so[self.player].value),
+                               seed=self.multiworld.seed_name.encode('utf-8')
+                               )
         patch.write()

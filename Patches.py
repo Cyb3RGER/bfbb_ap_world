@@ -19,7 +19,7 @@ AP_SAVE_LOAD = {
     0x2ab900: 0x7c8e782e,  # lwzx	r4, r14, r15
     0x2ab904: 0x4bdb3ed9,  # bl	->0x800430FC (Write__7xSerialFi)
     0x2ab908: 0x39ef0004,  # addi r15, r15, 4
-    0x2ab90c: 0x2C0f001c,  # cmp  r15, 0x1c
+    0x2ab90c: 0x2C0f007c,  # cmp  r15, 0x7c
     0x2ab910: 0x4081ffec,  # ble -> 0x8028f21c (-5)
     0x2ab914: 0x80010014,  # lwz	r0, 0x0014 (sp)
     0x2ab918: 0x7c0803a6,  # mtlr	r0
@@ -37,7 +37,7 @@ AP_SAVE_LOAD = {
     0x2ab940: 0x7c9d2378,  # mr	r29, r4
     0x2ab944: 0x4bdb4111,  # bl	->0x80043374 (Read_7xSerialFPUi)
     0x2ab948: 0x39ef0004,  # addi r15, r15, 4
-    0x2ab94c: 0x2C0f001c,  # cmp r15, 0x1c
+    0x2ab94c: 0x2C0f007c,  # cmp r15, 0x7c
     0x2ab950: 0x4081ffe8,  # ble -> 0x8028f258 (-6)
     0x2ab954: 0x3c80803c,  # lis	r4, 0x803C
     0x2ab958: 0x7fe3fb78,  # mr	r3, r31
