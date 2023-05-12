@@ -4,10 +4,12 @@ Battle for Bikini Bottom [Archipelago](https://archipelago.gg/) world
 
 ## Installation
 
-Place the .apworld in ``/lib/worlds/`` in your AP installtion.
+Place the .apworld in ``/lib/worlds/`` in your AP installation.
+Place the .pyd files in ``/lib/`` in your AP installation.
 
 ## Usage
 
+Use the included example yaml to configure your game.
 Use the Archipelago Launcher to start the BfBB Client and use the BfBB Client to load your ``.apbfbb`` file.
 
 ## Known Issues
