@@ -1168,7 +1168,8 @@ async def dolphin_sync_task(ctx: BfBBContext):
                         await ctx.disconnect()
                         await asyncio.sleep(5)
                         continue
-                    await check_death(ctx)
+                    if "DeathLink" in ctx.tags:
+                        await check_death(ctx)
                     await give_items(ctx)
                     await check_locations(ctx)
                     # await set_locations(ctx)
@@ -1178,7 +1179,7 @@ async def dolphin_sync_task(ctx: BfBBContext):
                             '\0')
                     if ctx.awaiting_rom:
                         await ctx.server_auth()
-                await asyncio.sleep(1 / 120)
+                await asyncio.sleep(.5)
             else:
                 if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
                     logger.info("Connection to Dolphin lost, reconnecting...")
@@ -1265,6 +1266,7 @@ def main(connect=None, password=None, patch_file=None):
         await ctx.shutdown()
 
         if ctx.dolphin_sync_task:
+            await asyncio.sleep(3)
             await ctx.dolphin_sync_task
 
     import colorama
