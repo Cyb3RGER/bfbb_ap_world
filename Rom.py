@@ -123,7 +123,7 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         print('--extraction done--')
         print('--making changes--')
         # load and setup IP libs
-        clr.AddReference(os.path.abspath(lib_path + '/IP/IndustrialPark.exe'))
+        clr.AddReference(os.path.abspath(lib_path + '/IP/IndustrialPark.dll'))
         clr.AddReference(os.path.abspath(lib_path + '/IP/HipHopFile.dll'))
         from HipHopFile import Platform, Game
         from IndustrialPark import ArchiveEditorFunctions, Link, HexUIntTypeConverter
