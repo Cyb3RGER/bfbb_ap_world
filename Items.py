@@ -19,17 +19,15 @@ class ItemData(typing.NamedTuple):
 
 class BfBBItem(Item):
     game: str = "Battle for Bikini Bottom"
-    # ToDo: remove (temp fix for generation with SM
-    type: str = 'lol'
 
 
 base_id = 149000
 
 item_table = {
     # spats
-    ItemNames.spat: ItemData(base_id + 0, ItemClassification.progression),
+    ItemNames.spat: ItemData(base_id + 0, ItemClassification.progression_skip_balancing),
     # socks
-    ItemNames.sock: ItemData(base_id + 1, ItemClassification.progression),
+    ItemNames.sock: ItemData(base_id + 1, ItemClassification.progression_skip_balancing),
     # shiny objects rewards
     ItemNames.so_100: ItemData(base_id + 2, ItemClassification.filler),
     ItemNames.so_250: ItemData(base_id + 3, ItemClassification.filler),
@@ -40,7 +38,7 @@ item_table = {
     ItemNames.bubble_bowl: ItemData(base_id + 7, ItemClassification.progression),
     ItemNames.cruise_bubble: ItemData(base_id + 8, ItemClassification.progression),
     # golden underwear
-    ItemNames.golden_underwear: ItemData(base_id + 9, ItemClassification.progression),
+    ItemNames.golden_underwear: ItemData(base_id + 9, ItemClassification.useful),
     # level pickups
     ItemNames.lvl_itm_jf: ItemData(base_id + 10, ItemClassification.progression),
     ItemNames.lvl_itm_bb: ItemData(base_id + 11, ItemClassification.progression),
