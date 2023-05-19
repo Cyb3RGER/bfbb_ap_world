@@ -37,8 +37,9 @@ validator page: [YAML Validation page](https://archipelago.gg/mysterycheck)
 ## Joining a MultiWorld Game
 
 Start ``ArchipelagoLauncher.exe`` and choose ``BfBB Client``. You will be asked to provide a ``.apbfbb`` patch file so
-choose your patch file. The client will then open, patch and attempt to open the resulting ``.gcm`` ISO file. You can also
-select a ``.gcm`` directly to just open it without patching or just click cancel, if you don't want to patch or open any ISO.
+choose your patch file. The client will then open, patch and attempt to open the resulting ``.gcm`` ISO file. Patching
+can take a while and the client will become unresponsive while patching. You can also select a ``.gcm`` directly to just
+open it without patching or just click cancel, if you don't want to patch or open any ISO.
 
 ### Connect to the Client
 

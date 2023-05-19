@@ -1,6 +1,11 @@
 # BfBB AP world
 
-Battle for Bikini Bottom [Archipelago](https://archipelago.gg/) world
+Battle for Bikini Bottom [Archipelago](https://archipelago.gg/) world.
+More info [here](https://github.com/Cyb3RGER/bfbb_ap_world/blob/main/docs/en_bfbb.md).
+
+## Installation & Usage
+
+See the [setup guide](https://github.com/Cyb3RGER/bfbb_ap_world/blob/main/docs/setup_en.md).
 
 ## Running from source
 
@@ -9,17 +14,8 @@ Battle for Bikini Bottom [Archipelago](https://archipelago.gg/) world
   - ``pip install dolphin-memory-engine``
   - ``pip install pythonnet``
 
-## Installation
-
-- Place the .apworld in ``/lib/worlds/`` in your AP installation.
-- Place the .pyd files in ``/lib/`` in your AP installation.
-
-## Usage
-
-Use the included example yaml to configure your game.
-Use the Archipelago Launcher to start the BfBB Client and use the BfBB Client to load your ``.apbfbb`` file.
-
 ## Known Issues
 
 - Some spatulas do not unlock when the level's items were already received (e.g. JF01)
-- Loading a non AP save file will lock the game in an infinite death loop and send all collected locations in that save file
+- Loading a non AP save file will lock the game in an infinite death loop and send all collected locations in that save file.
+- Rarely item will be sent again when loading a save (because of a race condition). Just reloading the save should fix that.
