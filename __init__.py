@@ -65,9 +65,9 @@ class BattleForBikiniBottom(World):
         filler_weights = [1, 2]
         # Generate item pool
         itempool = [ItemNames.spat] * self.multiworld.available_spatulas[self.player].value
-        if self.multiworld.available_spatulas[self.player].value - 100 > 0:
+        if 100 - self.multiworld.available_spatulas[self.player].value > 0:
             itempool += random.choices(filler_items, weights=filler_weights,
-                                       k=self.multiworld.available_spatulas[self.player].value - 100)
+                                       k=100 - self.multiworld.available_spatulas[self.player].value)
         if self.multiworld.include_socks[self.player].value:
             itempool += [ItemNames.sock] * 80
         if self.multiworld.include_skills[self.player].value:
