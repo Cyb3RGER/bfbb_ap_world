@@ -113,9 +113,6 @@ skill_rules = [
             LocationNames.sock_jf01_06: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
             LocationNames.sock_jf03_02: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
             LocationNames.sock_bb04_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
-            LocationNames.sock_gl03_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl,
-                                                                               player) or state.has(
-                ItemNames.cruise_bubble, player),
             LocationNames.sock_bc01_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
             # ToDo: check in-game
             LocationNames.sock_kf01_03: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
