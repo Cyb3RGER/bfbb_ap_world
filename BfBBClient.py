@@ -851,7 +851,7 @@ def _print_player_info(ctx: BfBBContext):
 
 
 def _give_item(ctx: BfBBContext, item_id: int):
-    match(item_id - base_id):
+    match (item_id - base_id):
         case 0:
             _give_spat(ctx)
         case 1:
@@ -934,30 +934,30 @@ async def give_items(ctx: BfBBContext):
 
 # ToDo: do we actually want this?
 # ToDo: implement socks/golden underwear/lvl_pickups/skills/ etc..
-async def set_locations(ctx: BfBBContext):
-    scene_ptr = dolphin_memory_engine.read_word(CUR_SCENE_PTR_ADDR)
-    if not _is_ptr_valid(scene_ptr):
-        return
-    scene = dolphin_memory_engine.read_bytes(scene_ptr, 0x4)
-    ptr = dolphin_memory_engine.read_word(SCENE_OBJ_LIST_PTR_ADDR)
-    if not _is_ptr_valid(ptr):
-        return
-    size = dolphin_memory_engine.read_word(SCENE_OBJ_LIST_SIZE_ADDR)
-    for v in ctx.checked_locations:
-        if v not in SPAT_PICKUP_IDS.keys():
-            continue
-        val = SPAT_PICKUP_IDS[v]
-        if val[0] != scene:
-            continue
-        obj_ptr = _find_obj_in_obj_table(val[1], ptr, size)
-        if obj_ptr is None: break
-        if obj_ptr == -1: continue
-        if not _is_ptr_valid(obj_ptr + 0x16C):
-            return
-        obj_state = dolphin_memory_engine.read_word(obj_ptr + 0x16C)
-        print(obj_state)
-        if obj_state is not None and obj_state & 0x4 == 0:
-            dolphin_memory_engine.write_word(obj_ptr + 0x16c, obj_state & ~0x3f | 0x4)
+# async def set_locations(ctx: BfBBContext):
+#     scene_ptr = dolphin_memory_engine.read_word(CUR_SCENE_PTR_ADDR)
+#     if not _is_ptr_valid(scene_ptr):
+#         return
+#     scene = dolphin_memory_engine.read_bytes(scene_ptr, 0x4)
+#     ptr = dolphin_memory_engine.read_word(SCENE_OBJ_LIST_PTR_ADDR)
+#     if not _is_ptr_valid(ptr):
+#         return
+#     size = dolphin_memory_engine.read_word(SCENE_OBJ_LIST_SIZE_ADDR)
+#     for v in ctx.checked_locations:
+#         if v not in SPAT_PICKUP_IDS.keys():
+#             continue
+#         val = SPAT_PICKUP_IDS[v]
+#         if val[0] != scene:
+#             continue
+#         obj_ptr = _find_obj_in_obj_table(val[1], ptr, size)
+#         if obj_ptr is None: break
+#         if obj_ptr == -1: continue
+#         if not _is_ptr_valid(obj_ptr + 0x16C):
+#             return
+#         obj_state = dolphin_memory_engine.read_word(obj_ptr + 0x16C)
+#         print(obj_state)
+#         if obj_state is not None and obj_state & 0x4 == 0:
+#             dolphin_memory_engine.write_word(obj_ptr + 0x16c, obj_state & ~0x3f | 0x4)
 
 
 def _check_pickup_state(ctx: BfBBContext, obj_ptr: int):
@@ -1013,7 +1013,7 @@ def _check_base_active(ctx: BfBBContext, obj_ptr: int):
     return not _check_base_inactive(ctx, obj_ptr)
 
 
-def _check_objects_by_id(ctx: BfBBContext, locations_checked: set, id_table: dict, check_cb: Callable):
+async def _check_objects_by_id(ctx: BfBBContext, locations_checked: set, id_table: dict, check_cb: Callable):
     scene_ptr = dolphin_memory_engine.read_word(CUR_SCENE_PTR_ADDR)
     if not _is_ptr_valid(scene_ptr):
         return
@@ -1023,7 +1023,7 @@ def _check_objects_by_id(ctx: BfBBContext, locations_checked: set, id_table: dic
         return
     size = dolphin_memory_engine.read_word(SCENE_OBJ_LIST_SIZE_ADDR)
     for k, v in id_table.items():
-        if k in locations_checked:
+        if k in locations_checked and k != base_id + 83 or ctx.finished_game:  # we need to check base_id + 83 for goal
             continue
         if v[0] is not None and v[0] != scene:
             continue
@@ -1033,41 +1033,48 @@ def _check_objects_by_id(ctx: BfBBContext, locations_checked: set, id_table: dic
             if obj_ptr == -1: continue
             if check_cb(ctx, obj_ptr):
                 locations_checked.add(k)
+                if k == base_id + 83 and not ctx.finished_game:
+                    print("send done")
+                    await ctx.send_msgs([
+                        {"cmd": "StatusUpdate",
+                         "status": 30}
+                    ])
+                    ctx.finished_game = True
                 break
 
 
-def _check_spats(ctx: BfBBContext, locations_checked: set):
-    _check_objects_by_id(ctx, locations_checked, SPAT_COUNTER_IDS,
-                         lambda ctx, ptr: _check_counter(ctx, ptr, lambda cnt: cnt == 2))
-    _check_objects_by_id(ctx, locations_checked, SPAT_PICKUP_IDS, _check_pickup_state)
+async def _check_spats(ctx: BfBBContext, locations_checked: set):
+    await _check_objects_by_id(ctx, locations_checked, SPAT_COUNTER_IDS,
+                               lambda ctx, ptr: _check_counter(ctx, ptr, lambda cnt: cnt == 2))
+    await _check_objects_by_id(ctx, locations_checked, SPAT_PICKUP_IDS, _check_pickup_state)
 
 
-def _check_socks(ctx: BfBBContext, locations_checked: set):
-    _check_objects_by_id(ctx, locations_checked, SOCK_PICKUP_IDS, _check_pickup_state)
+async def _check_socks(ctx: BfBBContext, locations_checked: set):
+    await _check_objects_by_id(ctx, locations_checked, SOCK_PICKUP_IDS, _check_pickup_state)
 
 
-def _check_golden_underwear(ctx: BfBBContext, locations_checked: set):
-    _check_objects_by_id(ctx, locations_checked, GOLDEN_UNDERWEAR_IDS, _check_pickup_state)
+async def _check_golden_underwear(ctx: BfBBContext, locations_checked: set):
+    await _check_objects_by_id(ctx, locations_checked, GOLDEN_UNDERWEAR_IDS, _check_pickup_state)
 
 
-def _check_level_pickups(ctx: BfBBContext, locations_checked: set):
-    _check_objects_by_id(ctx, locations_checked, KING_JF_DISP_ID, _check_base_active)
-    _check_objects_by_id(ctx, locations_checked, STEERING_WHEEL_PICKUP_IDS, _check_pickup_state)
-    _check_objects_by_id(ctx, locations_checked, BALLOON_KID_PLAT_IDS, _check_platform_state)
-    _check_objects_by_id(ctx, locations_checked, ART_WORK_IDS, _check_pickup_state)
-    _check_objects_by_id(ctx, locations_checked, OVERRIDE_BUTTON_IDS, _check_button_state)
-    _check_objects_by_id(ctx, locations_checked, SANDMAN_DSTR_IDS, _check_destructible_state)
-    _check_objects_by_id(ctx, locations_checked, LOST_CAMPER_TRIG_IDS, _check_base_inactive)
-    _check_objects_by_id(ctx, locations_checked, POWERCRYSTAL_PICKUP_IDS, _check_pickup_state)
-    _check_objects_by_id(ctx, locations_checked, CANNON_BUTTON_IDS, _check_button_state)
+async def _check_level_pickups(ctx: BfBBContext, locations_checked: set):
+    await _check_objects_by_id(ctx, locations_checked, KING_JF_DISP_ID, _check_base_active)
+    await _check_objects_by_id(ctx, locations_checked, STEERING_WHEEL_PICKUP_IDS, _check_pickup_state)
+    await _check_objects_by_id(ctx, locations_checked, BALLOON_KID_PLAT_IDS, _check_platform_state)
+    await _check_objects_by_id(ctx, locations_checked, ART_WORK_IDS, _check_pickup_state)
+    await _check_objects_by_id(ctx, locations_checked, OVERRIDE_BUTTON_IDS, _check_button_state)
+    await _check_objects_by_id(ctx, locations_checked, SANDMAN_DSTR_IDS, _check_destructible_state)
+    await _check_objects_by_id(ctx, locations_checked, LOST_CAMPER_TRIG_IDS, _check_base_inactive)
+    await _check_objects_by_id(ctx, locations_checked, POWERCRYSTAL_PICKUP_IDS, _check_pickup_state)
+    await _check_objects_by_id(ctx, locations_checked, CANNON_BUTTON_IDS, _check_button_state)
 
 
-def _check_purple_so(ctx: BfBBContext, locations_checked: set):
-    _check_objects_by_id(ctx, locations_checked, PURPLE_SO_IDS, _check_pickup_state)
+async def _check_purple_so(ctx: BfBBContext, locations_checked: set):
+    await _check_objects_by_id(ctx, locations_checked, PURPLE_SO_IDS, _check_pickup_state)
 
 
 def _check_skills(ctx: BfBBContext, locations_checked: set):
-    # /miwe just check if we checked the boss spats locations
+    # just check if we checked the boss spats locations
     if (base_id + 32) in locations_checked and (base_id + 234) not in locations_checked:
         locations_checked.add(base_id + 234)
     if (base_id + 57) in locations_checked and (base_id + 235) not in locations_checked:
@@ -1075,17 +1082,17 @@ def _check_skills(ctx: BfBBContext, locations_checked: set):
 
 
 async def check_locations(ctx: BfBBContext):
-    _check_spats(ctx, ctx.locations_checked)
+    await _check_spats(ctx, ctx.locations_checked)
     if CheckTypes.SOCK in ctx.included_check_types:
-        _check_socks(ctx, ctx.locations_checked)
+        await _check_socks(ctx, ctx.locations_checked)
     if CheckTypes.SKILLS in ctx.included_check_types:
         _check_skills(ctx, ctx.locations_checked)
     if CheckTypes.GOLDEN_UNDERWEAR in ctx.included_check_types:
-        _check_golden_underwear(ctx, ctx.locations_checked)
+        await _check_golden_underwear(ctx, ctx.locations_checked)
     if CheckTypes.LEVEL_ITEMS in ctx.included_check_types:
-        _check_level_pickups(ctx, ctx.locations_checked)
+        await _check_level_pickups(ctx, ctx.locations_checked)
     if CheckTypes.PURPLE_SO in ctx.included_check_types:
-        _check_purple_so(ctx, ctx.locations_checked)
+        await _check_purple_so(ctx, ctx.locations_checked)
     # ignore already in server state
     locations_checked = ctx.locations_checked.difference(ctx.checked_locations)
     if locations_checked:
@@ -1094,13 +1101,6 @@ async def check_locations(ctx: BfBBContext):
             {"cmd": "LocationChecks",
              "locations": locations_checked}
         ])
-        if base_id + 83 in locations_checked:
-            print("send done")
-            await ctx.send_msgs([
-                {"cmd": "StatusUpdate",
-                 "status": 30}
-            ])
-            ctx.finished_game = True
 
 
 async def check_death(ctx: BfBBContext):
