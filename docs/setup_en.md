@@ -2,7 +2,8 @@
 
 ## Required Software
 
-- [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) v0.4.1 or higher. Make sure to install the Generator.
+- [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) v0.4.1 or higher. Make sure to install the
+  Generator.
 - [This AP world](https://github.com/Cyb3RGER/bfbb_ap_world/releases)
 - Microsoft .NET Framework 4.8 or higher
 - [Dolphin](https://dolphin-emu.org/download/)
@@ -14,9 +15,10 @@
 - Place ``bfbb.apworld`` in ``lib/worlds/`` of your AP installation.
 - Place the included ``.pyd`` files in ``lib/`` of your AP installation.
 - Place the ISO in the root folder of your AP installation and make sure it's
-named ``Nickelodeon SpongeBob SquarePants - Battle for Bikini Bottom (USA).iso``.
+  named ``Nickelodeon SpongeBob SquarePants - Battle for Bikini Bottom (USA).iso``.
 
-For more information about .apworlds see [here](https://github.com/ArchipelagoMW/Archipelago/blob/main/docs/apworld%20specification.md)
+For more information about .apworlds
+see [here](https://github.com/ArchipelagoMW/Archipelago/blob/main/docs/apworld%20specification.md)
 
 ## Create a Config (.yaml) File
 
@@ -46,7 +48,9 @@ open it without patching or just click cancel, if you don't want to patch or ope
 #### With Dolphin
 
 The Client will automatically try to connect to Dolphin every 5 seconds and will do so if BfBB is running. If this
-doesn't work try restarting Dolphin and make sure you only have one instance running of Dolphin.
+doesn't work try restarting Dolphin and make sure you only have one instance running of Dolphin. If you still get the
+invalid game error message when using the US Version make sure that ``Emulated Memory Size Override`` (
+under ``Settings`` > ``Advanced``) is disabled.
 
 ### Connect to the Archipelago Server
 
