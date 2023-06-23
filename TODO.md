@@ -1,11 +1,5 @@
 # ToDo
 
-
-## release v1
-
-- docs
-- tests
-
 ## later
 
 - character

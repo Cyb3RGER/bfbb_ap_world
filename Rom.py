@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import os
 import sys
 import tempfile
@@ -11,6 +12,7 @@ import Utils
 from worlds.Files import AutoPatchRegister, APContainer
 from . import Patches
 from .inc.wwrando.wwlib.gcm import GCM
+from .names import ConnectionNames
 
 BFBB_HASH = "9e18f9a0032c4f3092945dc38a6517d3"
 
@@ -29,12 +31,16 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         self.include_level_items: int = kwargs['include_level_items']
         self.include_purple_so: int = kwargs['include_purple_so']
         self.seed: bytes = kwargs['seed']
+        self.randomize_gate_cost: int = kwargs['randomize_gate_cost']
+        self.gate_costs: dict[str, int] = kwargs['gate_costs']
         del kwargs['include_socks']
         del kwargs['include_skills']
         del kwargs['include_golden_underwear']
         del kwargs['include_level_items']
         del kwargs['include_purple_so']
         del kwargs['seed']
+        del kwargs['randomize_gate_cost']
+        del kwargs['gate_costs']
         super(BfBBDeltaPatch, self).__init__(*args, **kwargs)
 
     def write_contents(self, opened_zipfile: zipfile.ZipFile):
@@ -62,19 +68,36 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         opened_zipfile.writestr("seed",
                                 m.digest(),
                                 compress_type=zipfile.ZIP_STORED)
+        opened_zipfile.writestr("randomize_gate_cost",
+                                self.randomize_gate_cost.to_bytes(1, "little"),
+                                compress_type=zipfile.ZIP_STORED)
+        opened_zipfile.writestr(f"gate_costs.json", json.dumps(self.gate_costs))
 
     def read_contents(self, opened_zipfile: zipfile.ZipFile) -> None:
         super(BfBBDeltaPatch, self).read_contents(opened_zipfile)
 
     @classmethod
+    def get_int(cls, opened_zipfile: zipfile.ZipFile, name: str):
+        if name not in opened_zipfile.namelist():
+            logging.warning(f"couldn't find {name} in patch file")
+            return 0
+        return int.from_bytes(opened_zipfile.read(name), "little")
+
+    @classmethod
     def get_bool(cls, opened_zipfile: zipfile.ZipFile, name: str):
+        if name not in opened_zipfile.namelist():
+            logging.warning(f"couldn't find {name} in patch file")
+            return False
         return bool.from_bytes(opened_zipfile.read(name), "little")
 
     @classmethod
-    def get_manifest_json(cls, opened_zipfile: zipfile.ZipFile):
-        with opened_zipfile.open("archipelago.json", "r") as f:
-            manifest = json.load(f)
-        return manifest
+    def get_json_obj(cls, opened_zipfile: zipfile.ZipFile, name: str):
+        if name not in opened_zipfile.namelist():
+            logging.warning(f"couldn't find {name} in patch file")
+            return None
+        with opened_zipfile.open(name, "r") as f:
+            obj = json.load(f)
+        return obj
 
     @classmethod
     def get_seed_hash(cls, opened_zipfile: zipfile.ZipFile):
@@ -82,9 +105,11 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
 
     @classmethod
     async def apply_hiphop_changes(cls, opened_zipfile: zipfile.ZipFile, source_iso, dest_iso):
+        randomize_gate_cost = BfBBDeltaPatch.get_int(opened_zipfile, "randomize_gate_cost")
+        gate_costs = BfBBDeltaPatch.get_json_obj(opened_zipfile, "gate_costs.json")
         include_skills = BfBBDeltaPatch.get_bool(opened_zipfile, "include_skills")
         include_level_items = BfBBDeltaPatch.get_bool(opened_zipfile, "include_level_items")
-        if not include_skills and not include_level_items:
+        if not include_skills and not include_level_items and randomize_gate_cost == 0:
             return
         # extract dependencies need to patch with IP
         world_path = os.path.join(__file__[:__file__.find('worlds') + len('worlds')], 'bfbb.apworld')
@@ -125,8 +150,31 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         # load and setup IP libs
         clr.AddReference(os.path.abspath(lib_path + '/IP/IndustrialPark.dll'))
         clr.AddReference(os.path.abspath(lib_path + '/IP/HipHopFile.dll'))
+        clr.AddReference(os.path.abspath(lib_path + '/IP/Randomizer.dll'))
         from HipHopFile import Platform, Game
-        from IndustrialPark import ArchiveEditorFunctions, Link, HexUIntTypeConverter
+        from IndustrialPark import ArchiveEditorFunctions, Link, HexUIntTypeConverter, AutomaticUpdater
+        from IndustrialPark.Randomizer import RandomizableArchive
+
+        if not os.path.exists(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-master/'):
+            import requests
+            import io
+            editor_files_url = "https://github.com/igorseabra4/IndustrialPark-EditorFiles/archive/master.zip"
+            response = requests.get(editor_files_url)
+            # Check if the request was successful
+            if response.status_code == 200:
+                # Read the content of the response
+                zip_content = io.BytesIO(response.content)
+
+                # Open the zip file
+                with zipfile.ZipFile(zip_content, 'r') as zip_ref:
+                    # Extract all files to a directory (change the path accordingly)
+                    zip_ref.extractall(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/')
+
+                print("File successfully downloaded and extracted editor files.")
+            else:
+                print("Failed to download editor file.")
+
+
         class EventIDs(Enum):
             Increment = 0x000B
             Decrement = 0x000C
@@ -333,11 +381,13 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         if include_level_items:
             files_to_check.update(files_to_check_lvl_items)
         HexUIntTypeConverter.Legacy = True
-        editor_funcs = ArchiveEditorFunctions()
+        editor_funcs = RandomizableArchive()
         editor_funcs.SkipTextureDisplay = True
         editor_funcs.Platform = Platform.GameCube
         editor_funcs.Game = Game.BFBB
         editor_funcs.standalone = True
+        editor_funcs.NoLayers = True
+        editor_funcs.editorFilesFolder = f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-master/'
         # make changes with IP
         for name, assets_to_check in files_to_check.items():
             editor_funcs.OpenFile(extraction_path + f'/files/{name[:-2]}/{name}.HIP', False, Platform.Unknown)
@@ -355,6 +405,23 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
                     if not found:
                         assert False, f"link not found {data.event} => 0x{data.target:x} on 0x{id:x} in {name}.HIP"
                 editor_funcs.assetDictionary[id].Links = [link for link in links if link not in links_to_remove]
+            editor_funcs.Save()
+
+        if randomize_gate_cost > 0:
+            editor_funcs.OpenFile(extraction_path + f'/files/hb/hb01.HIP', False, Platform.Unknown)
+            if editor_funcs.ShuffleSpatulaGatesHB01(gate_costs[ConnectionNames.hub1_bb01],
+                                                    gate_costs[ConnectionNames.hub1_gl01],
+                                                    gate_costs[ConnectionNames.hub1_b1],
+                                                    gate_costs[ConnectionNames.hub2_rb01],
+                                                    gate_costs[ConnectionNames.hub2_sm01],
+                                                    gate_costs[ConnectionNames.hub2_b2],
+                                                    gate_costs[ConnectionNames.hub3_kf01],
+                                                    gate_costs[ConnectionNames.hub3_gy01]):
+                editor_funcs.ImportNumbers()
+            editor_funcs.Save()
+            editor_funcs.OpenFile(extraction_path + f'/files/hb/hb08.HIP', False, Platform.Unknown)
+            if editor_funcs.ShuffleSpatulaGatesHB08(gate_costs[ConnectionNames.cb_b3]):
+                editor_funcs.ImportNumbers()
             editor_funcs.Save()
         print('--done making changes--')
         # repack ISO (as gcm for better distinction)
@@ -374,7 +441,7 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
     async def apply_binary_changes(cls, opened_zipfile: zipfile.ZipFile, iso):
         print('--binary patching--')
         # get slot name and seed hash
-        manifest = BfBBDeltaPatch.get_manifest_json(opened_zipfile)
+        manifest = BfBBDeltaPatch.get_json_obj(opened_zipfile, "archipelago.json")
         slot_name = manifest["player_name"]
         slot_name_bytes = slot_name.encode('utf-8')
         slot_name_offset = 0x2AB980

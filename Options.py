@@ -1,5 +1,5 @@
 import typing
-from Options import Option, Toggle, DeathLink, Range
+from Options import Toggle, DeathLink, Range, AssembleOptions, Choice
 
 
 # ToDo
@@ -42,13 +42,31 @@ class IncludePurpleSO(Toggle):
     default = 1
 
 
-bfbb_options: typing.Dict[str, type(Option)] = {
+class RandomizeGateCost(Choice):
+    """Randomize how many golden spatulas are required for taxi gates
+    off = vanilla
+    low = cost will be between +/- 25% from vanilla cost
+    mid = cost will be between +/- 50% variance from vanilla cost
+    high = cost will be between +/- 75% variance from vanilla cost
+    full_random = cost will be between 0 and available spatulas for each gate
+                  (not recommended as it can extend generation time quite a bit since it tents reroll a bunch)
+    """
+    display_name = "Randomize Gate Cost"
+    option_off = 0
+    option_low = 1
+    option_mid = 2
+    option_high = 3
+    option_full_random = 4
+
+
+bfbb_options: typing.Dict[str, AssembleOptions] = {
     "available_spatulas": AvailableSpatulas,
     "include_socks": IncludeSocks,
     "include_skills": IncludeSkills,
     "include_golden_underwear": IncludeGoldenUnderwear,
     "include_level_items": IncludeLevelItems,
     "include_purple_so": IncludePurpleSO,
+    "randomize_gate_cost": RandomizeGateCost,
     "death_link": DeathLink,
 
 }

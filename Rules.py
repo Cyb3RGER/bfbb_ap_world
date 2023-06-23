@@ -1,6 +1,6 @@
 from typing import Callable, Dict
 
-from BaseClasses import MultiWorld, CollectionState
+from BaseClasses import MultiWorld, CollectionState, Entrance
 from worlds.AutoWorld import LogicMixin
 from worlds.bfbb.names import ConnectionNames, ItemNames, LocationNames, RegionNames
 from worlds.generic.Rules import set_rule, add_rule, CollectionRule
@@ -32,22 +32,19 @@ class BfBBLogic(LogicMixin):
         return sum(self.count(item_name, player) * amount for item_name, amount in self.values.items())
 
 
-# ToDo:
-# double check access rules
-
 spat_rules = [
     # connections
     {
         ConnectionNames.pineapple_hub1: lambda player: lambda state: state.has(ItemNames.spat, player, 1),
-        ConnectionNames.hub1_bb01: lambda player: lambda state: state.has(ItemNames.spat, player, 5),
-        ConnectionNames.hub1_gl01: lambda player: lambda state: state.has(ItemNames.spat, player, 10),
-        ConnectionNames.hub1_b1: lambda player: lambda state: state.has(ItemNames.spat, player, 15),
-        ConnectionNames.hub2_rb01: lambda player: lambda state: state.has(ItemNames.spat, player, 25),
-        ConnectionNames.hub2_sm01: lambda player: lambda state: state.has(ItemNames.spat, player, 30),
-        ConnectionNames.hub2_b2: lambda player: lambda state: state.has(ItemNames.spat, player, 40),
-        ConnectionNames.hub3_kf01: lambda player: lambda state: state.has(ItemNames.spat, player, 50),
-        ConnectionNames.hub3_gy01: lambda player: lambda state: state.has(ItemNames.spat, player, 60),
-        ConnectionNames.cb_b3: lambda player: lambda state: state.has(ItemNames.spat, player, 75),
+        # ConnectionNames.hub1_bb01: lambda player: lambda state: state.has(ItemNames.spat, player, 5),
+        # ConnectionNames.hub1_gl01: lambda player: lambda state: state.has(ItemNames.spat, player, 10),
+        # ConnectionNames.hub1_b1: lambda player: lambda state: state.has(ItemNames.spat, player, 15),
+        # ConnectionNames.hub2_rb01: lambda player: lambda state: state.has(ItemNames.spat, player, 25),
+        # ConnectionNames.hub2_sm01: lambda player: lambda state: state.has(ItemNames.spat, player, 30),
+        # ConnectionNames.hub2_b2: lambda player: lambda state: state.has(ItemNames.spat, player, 40),
+        # ConnectionNames.hub3_kf01: lambda player: lambda state: state.has(ItemNames.spat, player, 50),
+        # ConnectionNames.hub3_gy01: lambda player: lambda state: state.has(ItemNames.spat, player, 60),
+        # ConnectionNames.cb_b3: lambda player: lambda state: state.has(ItemNames.spat, player, 75),
     },
     # locations
     {
@@ -84,9 +81,9 @@ sock_rules = [
 skill_rules = [
     # connections
     {
-        ConnectionNames.hub2_b2: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
-        ConnectionNames.cb_b3: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) and state.has(
+        ConnectionNames.hub2_b2: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) or state.has(
             ItemNames.cruise_bubble, player),
+        ConnectionNames.cb_b3: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         ConnectionNames.bc01_bc02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         ConnectionNames.bc02_bc03: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         ConnectionNames.bc02_bc05: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
@@ -108,6 +105,8 @@ skill_rules = [
             LocationNames.spat_gy_02: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
             LocationNames.spat_gy_03: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
             LocationNames.spat_db_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
+            LocationNames.spat_b3_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) and \
+                                                                   state.has(ItemNames.cruise_bubble, player),
         },
         ItemNames.sock: {
             LocationNames.sock_jf01_06: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
@@ -201,11 +200,7 @@ so_krabs_rules = [
 ]
 
 
-def _add_rules(world: MultiWorld, player: int,
-               rules: list[
-                   dict[str, Callable[[int], CollectionRule] | tuple[Callable[[int], CollectionRule], bool] | dict[
-                       str, Callable[[int], CollectionRule] | tuple[Callable[[int], CollectionRule], bool]]]],
-               allowed_loc_types: list[str]):
+def _add_rules(world: MultiWorld, player: int, rules: list, allowed_loc_types: list[str]):
     for name, rule_factory in rules[0].items():
         if type(rule_factory) == tuple and len(rule_factory) > 1 and rule_factory[1]:  # force override
             rule_factory = rule_factory[0]
@@ -223,8 +218,7 @@ def _add_rules(world: MultiWorld, player: int,
                 add_rule(world.get_location(name, player), rule_factory(player))
 
 
-def _set_rules(world: MultiWorld, player: int, rules: list[dict[str, Callable[[int], CollectionRule] | dict[str, Callable[[int], CollectionRule]]]],
-               allowed_loc_types: list[str]):
+def _set_rules(world: MultiWorld, player: int, rules: list, allowed_loc_types: list[str]):
     for name, rule_factory in rules[0].items():
         set_rule(world.get_entrance(name, player), rule_factory(player))
     for loc_type, type_rules in rules[1].items():
@@ -234,7 +228,20 @@ def _set_rules(world: MultiWorld, player: int, rules: list[dict[str, Callable[[i
             set_rule(world.get_location(name, player), rule_factory(player))
 
 
-def set_rules(world: MultiWorld, player: int):
+def reset_gate_rules(old_rules: dict[Entrance, any]):
+    for ent, v in old_rules.items():
+        ent.access_rule = v
+
+
+def set_gate_rules(player: int, gate_costs: dict[Entrance, int]):
+    old_rules = {}
+    for ent, v in gate_costs.items():
+        old_rules[ent] = ent.access_rule
+        add_rule(ent, (lambda val=v: lambda state: state.has(ItemNames.spat, player, val))())
+    return old_rules
+
+
+def set_rules(world: MultiWorld, player: int, gate_costs):
     allowed_loc_types = [ItemNames.spat]
     if world.include_socks[player].value:
         allowed_loc_types += [ItemNames.sock]

@@ -1177,6 +1177,14 @@ async def dolphin_sync_task(ctx: BfBBContext):
                     if not ctx.auth:
                         ctx.auth = dolphin_memory_engine.read_bytes(SLOT_NAME_ADDR, 0x40).decode('utf-8').strip(
                             '\0')
+                        if ctx.auth == '\x02\x00\x00\x00\x04\x00\x00\x00\x02\x00\x00\x00\x04\x00\x00\x00\x02\x00\x00' \
+                                       '\x00\x02\x00\x00\x00\x04\x00\x00\x00\x04':
+                            logger.info("Vanilla game detected. Please load the patched game.")
+                            ctx.dolphin_status = CONNECTION_REFUSED_GAME_STATUS
+                            ctx.awaiting_rom = False
+                            dolphin_memory_engine.un_hook()
+                            await ctx.disconnect()
+                            await asyncio.sleep(5)
                     if ctx.awaiting_rom:
                         await ctx.server_auth()
                 await asyncio.sleep(.5)

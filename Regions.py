@@ -1,9 +1,9 @@
 from .Locations import BfBBLocation, location_table, \
     sock_location_table, spat_location_table, level_item_location_table, golden_underwear_location_table, \
     skill_location_table, purple_so_location_table
-from .names import ConnectionNames, LevelNames, RegionNames, LocationNames, ItemNames
+from .names import ConnectionNames, LevelNames, RegionNames, LocationNames
 
-from BaseClasses import MultiWorld, Region, Entrance, ItemClassification
+from BaseClasses import MultiWorld, Region, Entrance
 
 
 def create_region(world: MultiWorld, player: int, name: str, locations=None, exits=None) -> Region:
