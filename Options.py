@@ -49,7 +49,7 @@ class RandomizeGateCost(Choice):
     mid = cost will be between +/- 50% variance from vanilla cost
     high = cost will be between +/- 75% variance from vanilla cost
     full_random = cost will be between 0 and available spatulas for each gate
-                  (not recommended as it can extend generation time quite a bit since it tents reroll a bunch)
+                  (not recommended as it can extend generation time quite a bit)
     """
     display_name = "Randomize Gate Cost"
     option_off = 0

@@ -1,4 +1,4 @@
-from worlds.bfbb.names import LevelNames, RegionNames, ItemNames
+from . import LevelNames, RegionNames, ItemNames
 
 # Spatulas
 # Hub (0-7)

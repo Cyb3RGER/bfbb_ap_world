@@ -1,8 +1,8 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, List, Tuple
 
 from BaseClasses import MultiWorld, CollectionState, Entrance
 from worlds.AutoWorld import LogicMixin
-from worlds.bfbb.names import ConnectionNames, ItemNames, LocationNames, RegionNames
+from .names import ConnectionNames, ItemNames, LocationNames, RegionNames
 from worlds.generic.Rules import set_rule, add_rule, CollectionRule
 
 
@@ -137,7 +137,9 @@ skill_rules = [
         },
         ItemNames.so_purple: {
             LocationNames.purple_so_bb04_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
-            LocationNames.purple_so_bc01_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
+            LocationNames.purple_so_bc01_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl,
+                                                                                    player) or state.has(
+                ItemNames.cruise_bubble, player),
             LocationNames.purple_so_bc02_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
             LocationNames.purple_so_bc02_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
             LocationNames.purple_so_kf01_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
@@ -200,7 +202,7 @@ so_krabs_rules = [
 ]
 
 
-def _add_rules(world: MultiWorld, player: int, rules: list, allowed_loc_types: list[str]):
+def _add_rules(world: MultiWorld, player: int, rules: List, allowed_loc_types: List[str]):
     for name, rule_factory in rules[0].items():
         if type(rule_factory) == tuple and len(rule_factory) > 1 and rule_factory[1]:  # force override
             rule_factory = rule_factory[0]
@@ -218,7 +220,7 @@ def _add_rules(world: MultiWorld, player: int, rules: list, allowed_loc_types: l
                 add_rule(world.get_location(name, player), rule_factory(player))
 
 
-def _set_rules(world: MultiWorld, player: int, rules: list, allowed_loc_types: list[str]):
+def _set_rules(world: MultiWorld, player: int, rules: List, allowed_loc_types: List[str]):
     for name, rule_factory in rules[0].items():
         set_rule(world.get_entrance(name, player), rule_factory(player))
     for loc_type, type_rules in rules[1].items():
@@ -228,12 +230,12 @@ def _set_rules(world: MultiWorld, player: int, rules: list, allowed_loc_types: l
             set_rule(world.get_location(name, player), rule_factory(player))
 
 
-def reset_gate_rules(old_rules: dict[Entrance, any]):
+def reset_gate_rules(old_rules: Dict[Entrance, any]):
     for ent, v in old_rules.items():
         ent.access_rule = v
 
 
-def set_gate_rules(player: int, gate_costs: dict[Entrance, int]):
+def set_gate_rules(player: int, gate_costs: Dict[Entrance, int]):
     old_rules = {}
     for ent, v in gate_costs.items():
         old_rules[ent] = ent.access_rule

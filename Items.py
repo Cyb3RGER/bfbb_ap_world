@@ -1,6 +1,6 @@
 import typing
 from BaseClasses import Item, ItemClassification
-from worlds.bfbb.names import ItemNames
+from .names import ItemNames
 
 
 class ItemData(typing.NamedTuple):

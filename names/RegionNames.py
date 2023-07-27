@@ -1,4 +1,4 @@
-from worlds.bfbb.names import LevelNames
+from . import LevelNames
 
 menu = "Menu"
 

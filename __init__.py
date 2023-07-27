@@ -5,6 +5,7 @@ import random
 import sys
 import zipfile
 from multiprocessing import Process
+from typing import TextIO
 
 import Utils
 from BaseClasses import Item, Tutorial
@@ -17,20 +18,21 @@ from .Options import bfbb_options
 from .Regions import create_regions
 from .Rom import BfBBDeltaPatch
 from .Rules import set_rules, set_gate_rules, reset_gate_rules
-from worlds.LauncherComponents import Component, components, Type
+from worlds.LauncherComponents import Component, components, Type, SuffixIdentifier
 from .names import ItemNames, ConnectionNames
 
 
 def run_client():
     print('running bfbb client')
-    from .BfBBClient import main  # lazy import
+    from worlds.bfbb.BfBBClient import main  # lazy import
     file_types = (('BfBB Patch File', ('.apbfbb',)), ('NGC iso', ('.gcm',)),)
     kwargs = {'patch_file': Utils.open_filename("Select .apbfbb", file_types)}
     p = Process(target=main, kwargs=kwargs)
     p.start()
 
 
-components.append(Component("BfBB Client", func=run_client, component_type=Type.CLIENT))
+components.append(Component("BfBB Client", func=run_client, component_type=Type.CLIENT,
+                            file_identifier=SuffixIdentifier('.apbfbb')))
 
 
 class BattleForBikiniBottomWeb(WebWorld):
@@ -90,7 +92,7 @@ class BattleForBikiniBottom(World):
                              prog_items.copy(), True)
             # print("successfully filled spats!")
             beatable = True
-        except FillError:
+        except FillError as e:
             # print(">>> failed to fill spats")
             reset_gate_rules(old_rules)
             beatable = False
@@ -105,20 +107,24 @@ class BattleForBikiniBottom(World):
         return beatable
 
     def reroll_gate_costs(self):
+        print(f"Rerolling gate cost for Player {self.multiworld.get_player_name(self.player)} with randomize_gate_cost = {self.multiworld.randomize_gate_cost[self.player].value}")
         randomize_gate_cost = self.multiworld.randomize_gate_cost[self.player].value
         # get the 3 keys (prioritize hub connections and earlier connections and higher values)
         weights = [5, 5, 15, 3, 3, 10, 1, 1, 0]
         values = [v for _, v in self.gate_costs.items()]
         weights = [x * (y / 5) for x, y in zip(weights, values)]
-        k = 2 if randomize_gate_cost < 4 else 2
-        keys = random.choices([k for k in self.gate_costs], weights=weights, k=k)
-        gate_cost_fact = 0.25 if randomize_gate_cost == 1 else 0.5 if randomize_gate_cost == 2 else 0.75
-        min_value = 0
-        # print(keys)
-        for k in keys:
-            if randomize_gate_cost != 4:
+        k = 4
+        if randomize_gate_cost == 4:
+            keys = random.sample([k for k in self.gate_costs], counts=weights, k=k)
+            # print(keys)
+            for k in keys:
+                self.gate_costs[k] = self.multiworld.random.randint(0, self.gate_costs[k]-1)
+        else:
+            gate_cost_fact = 0.25 if randomize_gate_cost == 1 else 0.5 if randomize_gate_cost == 2 else 0.75
+            for k, v in self.gate_costs.items():
                 min_value = round(default_gate_costs[k] * (max(1 - gate_cost_fact, 0)))
-            self.gate_costs[k] = self.multiworld.random.randint(min_value, self.gate_costs[k])
+                if min_value < v:
+                    self.gate_costs[k] = self.multiworld.random.randint(min_value, v-1)
 
         # print(self.gate_costs, min_value)
 
@@ -146,14 +152,16 @@ class BattleForBikiniBottom(World):
         self.roll_gate_costs()
 
     def pre_fill(self) -> None:
-        max_tries = 20
-        tries = 0
-        while not self.test_gate_cost_beatable() and tries < max_tries:
-            # print(f"reroll gate costs try {tries + 1}")
-            self.reroll_gate_costs()
-            tries = tries + 1
-            if tries >= max_tries:
-                raise FillError(f"failed to find beatable gate costs after {max_tries}")
+        if self.multiworld.randomize_gate_cost[self.player].value >= 0:
+            max_tries = 20
+            tries = 0
+            while not self.test_gate_cost_beatable() and tries < max_tries:
+                # print(f"reroll gate costs try {tries + 1}")
+                self.reroll_gate_costs()
+                tries = tries + 1
+                if tries >= max_tries:
+                    raise FillError(
+                        f"failed to find beatable gate costs after {max_tries} with randomize_gate_cost = {self.multiworld.randomize_gate_cost[self.player].value}")
 
     def get_items(self):
         filler_items = [ItemNames.so_100, ItemNames.so_250]
@@ -221,6 +229,12 @@ class BattleForBikiniBottom(World):
         item_data = item_table[name]
         item = BfBBItem(name, item_data.classification, item_data.id, self.player)
         return item
+
+    def write_spoiler(self, spoiler_handle: TextIO) -> None:
+        if self.multiworld.randomize_gate_cost[self.player].value > 0:
+            spoiler_handle.write(f"\n\nGate Costs ({self.multiworld.get_player_name(self.player)}):\n\n")
+            for k, v in self.gate_costs.items():
+                spoiler_handle.write(f"{k}: {v}\n")
 
     def generate_output(self, output_directory: str) -> None:
         patch = BfBBDeltaPatch(path=os.path.join(output_directory,

@@ -1,4 +1,4 @@
-from worlds.bfbb.names import RegionNames
+from . import RegionNames
 
 start_game = "Start Game"
 

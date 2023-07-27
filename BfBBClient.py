@@ -8,7 +8,7 @@ import traceback
 import zipfile
 from enum import Flag
 from queue import SimpleQueue
-from typing import Callable, Optional, Any, Dict
+from typing import Callable, Optional, Any, Dict, Tuple
 
 from .inc.packages import dolphin_memory_engine
 
@@ -737,7 +737,7 @@ def _inc_delayed_item_count(ctx: BfBBContext, addr: int, val: int = 1):
     dolphin_memory_engine.write_byte(addr, cur_count + val)
 
 
-def _get_ptr_from_info(ctx: BfBBContext, info: tuple[bytes, int]):
+def _get_ptr_from_info(ctx: BfBBContext, info: Tuple[bytes, int]):
     if not _check_cur_scene(ctx, info[0]):
         return None
     obj_ptr = _find_obj_in_obj_table(info[1])
@@ -746,7 +746,7 @@ def _get_ptr_from_info(ctx: BfBBContext, info: tuple[bytes, int]):
     return obj_ptr
 
 
-def _set_counter_value(ctx: BfBBContext, cntr_info: tuple[bytes, int], val: int):
+def _set_counter_value(ctx: BfBBContext, cntr_info: Tuple[bytes, int], val: int):
     obj_ptr = _get_ptr_from_info(ctx, cntr_info)
     if obj_ptr is None:
         return
@@ -756,7 +756,7 @@ def _set_counter_value(ctx: BfBBContext, cntr_info: tuple[bytes, int], val: int)
         dolphin_memory_engine.write_bytes(count_addr, val.to_bytes(0x2, "big"))
 
 
-def _set_pickup_active(ctx: BfBBContext, pickup_info: tuple[bytes, int]):
+def _set_pickup_active(ctx: BfBBContext, pickup_info: Tuple[bytes, int]):
     obj_ptr = _get_ptr_from_info(ctx, pickup_info)
     if obj_ptr is None:
         return
@@ -770,7 +770,7 @@ def _set_pickup_active(ctx: BfBBContext, pickup_info: tuple[bytes, int]):
         dolphin_memory_engine.write_byte(obj_ptr + 0x18, current_ent_flags)
 
 
-def _set_plat_active(ctx: BfBBContext, plat_info: tuple[bytes, int]):
+def _set_plat_active(ctx: BfBBContext, plat_info: Tuple[bytes, int]):
     obj_ptr = _get_ptr_from_info(ctx, plat_info)
     if obj_ptr is None:
         return
@@ -782,7 +782,7 @@ def _set_plat_active(ctx: BfBBContext, plat_info: tuple[bytes, int]):
         dolphin_memory_engine.write_byte(obj_ptr + 0x22, 0x18)  # collision on
 
 
-def _set_plat_inactive(ctx: BfBBContext, plat_info: tuple[bytes, int]):
+def _set_plat_inactive(ctx: BfBBContext, plat_info: Tuple[bytes, int]):
     obj_ptr = _get_ptr_from_info(ctx, plat_info)
     if obj_ptr is None:
         return
@@ -794,7 +794,7 @@ def _set_plat_inactive(ctx: BfBBContext, plat_info: tuple[bytes, int]):
         dolphin_memory_engine.write_byte(obj_ptr + 0x22, 0)  # collision off
 
 
-def _set_taskbox_success(ctx: BfBBContext, task_info: tuple[bytes, int]):
+def _set_taskbox_success(ctx: BfBBContext, task_info: Tuple[bytes, int]):
     obj_ptr = _get_ptr_from_info(ctx, task_info)
     if obj_ptr is None:
         return
@@ -805,7 +805,7 @@ def _set_taskbox_success(ctx: BfBBContext, task_info: tuple[bytes, int]):
         _set_trig_active(ctx, BALLOON_KID_SUC_TRIG_ID)
 
 
-def _set_trig_active(ctx: BfBBContext, trig_info: tuple[bytes, int]):
+def _set_trig_active(ctx: BfBBContext, trig_info: Tuple[bytes, int]):
     obj_ptr = _get_ptr_from_info(ctx, trig_info)
     if obj_ptr is None:
         return
@@ -851,49 +851,49 @@ def _print_player_info(ctx: BfBBContext):
 
 
 def _give_item(ctx: BfBBContext, item_id: int):
-    match (item_id - base_id):
-        case 0:
-            _give_spat(ctx)
-        case 1:
-            _give_sock(ctx)
-        case 2:
-            _give_shiny_objects(ctx, 100)
-        case 3:
-            _give_shiny_objects(ctx, 250)
-        case 4:
-            _give_shiny_objects(ctx, 500)
-        case 5:
-            _give_shiny_objects(ctx, 750)
-        case 6:
-            _give_shiny_objects(ctx, 1000)
-        case 7:
-            _give_powerup(ctx, 0)
-        case 8:
-            _give_powerup(ctx, 1)
-        case 9:
-            _give_golden_underwear(ctx)
-        case 10:
-            _give_level_pickup(ctx, 1)
-        case 11:
-            _give_level_pickup(ctx, 2)
-        case 12:
-            _give_level_pickup(ctx, 3)
-            _inc_delayed_item_count(ctx, BALLOON_KID_COUNT_ADDR)
-        case 13:
-            _give_level_pickup(ctx, 5)
-        case 14:
-            _give_level_pickup(ctx, 6)
-        case 15:
-            _inc_delayed_item_count(ctx, SANDMAN_COUNT_ADDR)
-        case 16:
-            _give_level_pickup(ctx, 9)
-        case 17:
-            _inc_delayed_item_count(ctx, POWER_CRYSTAL_COUNT_ADDR)
-        case 18:
-            _give_level_pickup(ctx, 10)
-            _inc_delayed_item_count(ctx, CANNON_BUTTON_COUNT_ADDR)
-        case _:
-            logger.warning(f"Received unknown item with id {item_id}")
+    temp = item_id - base_id
+    if temp == 0:
+        _give_spat(ctx)
+    elif temp == 1:
+        _give_sock(ctx)
+    elif temp == 2:
+        _give_shiny_objects(ctx, 100)
+    elif temp == 3:
+        _give_shiny_objects(ctx, 250)
+    elif temp == 4:
+        _give_shiny_objects(ctx, 500)
+    elif temp == 5:
+        _give_shiny_objects(ctx, 750)
+    elif temp == 6:
+        _give_shiny_objects(ctx, 1000)
+    elif temp == 7:
+        _give_powerup(ctx, 0)
+    elif temp == 8:
+        _give_powerup(ctx, 1)
+    elif temp == 9:
+        _give_golden_underwear(ctx)
+    elif temp == 10:
+        _give_level_pickup(ctx, 1)
+    elif temp == 11:
+        _give_level_pickup(ctx, 2)
+    elif temp == 12:
+        _give_level_pickup(ctx, 3)
+        _inc_delayed_item_count(ctx, BALLOON_KID_COUNT_ADDR)
+    elif temp == 13:
+        _give_level_pickup(ctx, 5)
+    elif temp == 14:
+        _give_level_pickup(ctx, 6)
+    elif temp == 15:
+        _inc_delayed_item_count(ctx, SANDMAN_COUNT_ADDR)
+    elif temp == 16:
+        _give_level_pickup(ctx, 9)
+    elif temp == 17:
+        _inc_delayed_item_count(ctx, POWER_CRYSTAL_COUNT_ADDR)
+    elif temp == 18:
+        _give_level_pickup(ctx, 10)
+        _inc_delayed_item_count(ctx, CANNON_BUTTON_COUNT_ADDR)
+    else:
+        logger.warning(f"Received unknown item with id {item_id}")
 
 
 def update_delayed_items(ctx: BfBBContext):

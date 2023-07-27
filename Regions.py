@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 from .Locations import BfBBLocation, location_table, \
     sock_location_table, spat_location_table, level_item_location_table, golden_underwear_location_table, \
     skill_location_table, purple_so_location_table
@@ -19,7 +21,7 @@ def create_region(world: MultiWorld, player: int, name: str, locations=None, exi
     return ret
 
 
-def _get_locations_for_region(world, player: int, name: str) -> list[str]:
+def _get_locations_for_region(world, player: int, name: str) -> List[str]:
     result = [k for k in spat_location_table if f"{name}:" in k]
     if name == RegionNames.hub1:
         result += [k for k in spat_location_table if f"{LevelNames.hub}:" in k]
@@ -38,7 +40,7 @@ def _get_locations_for_region(world, player: int, name: str) -> list[str]:
     return result
 
 
-exit_table: dict[str, list[str]] = {
+exit_table: Dict[str, List[str]] = {
     RegionNames.menu: [ConnectionNames.start_game],
     RegionNames.pineapple: [ConnectionNames.pineapple_hub1],
     RegionNames.hub1: [ConnectionNames.hub1_pineapple, ConnectionNames.hub1_squid, ConnectionNames.hub1_pat,
