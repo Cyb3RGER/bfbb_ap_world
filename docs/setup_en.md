@@ -13,7 +13,7 @@
 ## Installation Procedures
 
 - Place ``bfbb.apworld`` in ``lib/worlds/`` of your AP installation.
-- Place the included ``.pyd`` files in ``lib/`` of your AP installation.
+- Place the included ``.pyd`` files and the ``dolphin_memory_engine`` folder into ``lib/`` of your AP installation.
 - Place the ISO in the root folder of your AP installation and make sure it's
   named ``Nickelodeon SpongeBob SquarePants - Battle for Bikini Bottom (USA).iso``.
 
