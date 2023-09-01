@@ -152,7 +152,7 @@ class BattleForBikiniBottom(World):
         self.roll_gate_costs()
 
     def pre_fill(self) -> None:
-        if self.multiworld.randomize_gate_cost[self.player].value >= 0:
+        if self.multiworld.randomize_gate_cost[self.player].value > 0:
             max_tries = 20
             tries = 0
             while not self.test_gate_cost_beatable() and tries < max_tries:
