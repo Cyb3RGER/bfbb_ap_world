@@ -1244,7 +1244,7 @@ async def patch_and_run_game(ctx: BfBBContext, patch_file):
 
 def main(connect=None, password=None, patch_file=None):
     # Text Mode to use !hint and such with games that have no text entry
-    Utils.init_logging("BBfBClient")
+    Utils.init_logging("BfBBClient")
 
     logger.warning(f"starting {connect}, {password}, {patch_file}")
 
