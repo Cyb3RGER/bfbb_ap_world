@@ -1,5 +1,5 @@
-from worlds.bfbb.names import LocationNames, ItemNames
-from worlds.bfbb.test import BfBBTestBase
+from ..names import LocationNames, ItemNames
+from . import BfBBTestBase
 
 
 class MrKrabsSOTest(BfBBTestBase):
