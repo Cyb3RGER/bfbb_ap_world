@@ -112,7 +112,7 @@ class BattleForBikiniBottom(World):
         # get the 3 keys (prioritize hub connections and earlier connections and higher values)
         weights = [5, 5, 15, 3, 3, 10, 1, 1, 0]
         values = [v for _, v in self.gate_costs.items()]
-        weights = [x * (y / 5) for x, y in zip(weights, values)]
+        weights = [round(x * (y / 5)) for x, y in zip(weights, values)]
         k = 4
         if randomize_gate_cost == 4:
             keys = random.sample([k for k in self.gate_costs], counts=weights, k=k)
