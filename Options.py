@@ -45,8 +45,8 @@ class IncludePurpleSO(Toggle):
 class RandomizeGateCost(Choice):
     """Randomize how many golden spatulas are required for taxi gates.
     This will pick a random level order and increment on gate cost according to the level order.
-    Low, mid and high refer to that increment.
-    high will likely fail to generate on single player seeds or seeds with few filler locations.
+    Low, mid and high refer to possible increment between levels.
+    High will likely fail to generate on single player seeds or seeds with few filler locations.
     """
     display_name = "Randomize Gate Cost"
     option_off = 0
