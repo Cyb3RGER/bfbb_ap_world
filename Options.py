@@ -53,7 +53,7 @@ class RandomizeGateCost(Choice):
     option_low = 1
     option_mid = 2
     option_high = 3
-    default = 1
+    default = 0
 
 
 bfbb_options: typing.Dict[str, AssembleOptions] = {
