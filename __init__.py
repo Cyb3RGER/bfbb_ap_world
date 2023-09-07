@@ -84,12 +84,8 @@ class BattleForBikiniBottom(World):
 
     def generate_early(self) -> None:
         if self.multiworld.randomize_gate_cost[self.player].value > 0:
-            print(self.multiworld.player_name[self.player], self.multiworld.randomize_gate_cost[self.player])
             self.roll_level_order()
-            print(self.level_order)
             self.set_gate_costs()
-            for k in self.level_order:
-                print(k, self.gate_costs[k])
 
     def roll_level_order(self):
         level_left = [ConnectionNames.hub1_bb01, ConnectionNames.hub1_gl01, ConnectionNames.hub2_rb01,
