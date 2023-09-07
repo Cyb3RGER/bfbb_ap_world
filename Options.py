@@ -43,20 +43,17 @@ class IncludePurpleSO(Toggle):
 
 
 class RandomizeGateCost(Choice):
-    """Randomize how many golden spatulas are required for taxi gates
-    off = vanilla
-    low = cost will be between +/- 25% from vanilla cost
-    mid = cost will be between +/- 50% variance from vanilla cost
-    high = cost will be between +/- 75% variance from vanilla cost
-    full_random = cost will be between 0 and available spatulas for each gate
-                  (not recommended as it can extend generation time quite a bit)
+    """Randomize how many golden spatulas are required for taxi gates.
+    This will pick a random level order and increment on gate cost according to the level order.
+    Low, mid and high refer to that increment.
+    high will likely fail to generate on single player seeds or seeds with few filler locations.
     """
     display_name = "Randomize Gate Cost"
     option_off = 0
     option_low = 1
     option_mid = 2
     option_high = 3
-    option_full_random = 4
+    default = 1
 
 
 bfbb_options: typing.Dict[str, AssembleOptions] = {

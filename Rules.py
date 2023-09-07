@@ -268,4 +268,6 @@ def set_rules(world: MultiWorld, player: int, gate_costs):
     if world.include_purple_so[player].value:
         _set_rules(world, player, so_krabs_rules, allowed_loc_types)  # we override krabs requirements here
 
+    set_gate_rules(player, {world.get_entrance(k, player): v for k, v in gate_costs.items()})
+
     world.completion_condition[player] = lambda state: state.has("Victory", player)

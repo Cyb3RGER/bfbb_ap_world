@@ -17,7 +17,7 @@ from .Locations import location_table, BfBBLocation
 from .Options import bfbb_options
 from .Regions import create_regions
 from .Rom import BfBBDeltaPatch
-from .Rules import set_rules, set_gate_rules, reset_gate_rules
+from .Rules import set_rules
 from worlds.LauncherComponents import Component, components, Type, SuffixIdentifier
 from .names import ItemNames, ConnectionNames
 
@@ -78,90 +78,68 @@ class BattleForBikiniBottom(World):
     def __init__(self, multiworld: "MultiWorld", player: int):
         super().__init__(multiworld, player)
         self.gate_costs = default_gate_costs.copy()
-
-    def test_gate_cost_beatable(self) -> bool:
-        old_rules = set_gate_rules(self.player, {self.multiworld.get_entrance(k, self.player): v for k, v in
-                                                 self.gate_costs.items()})
-        spat_locations = self.multiworld.get_unfilled_locations(self.player)
-        prog_items = list(
-            filter(lambda item: item.player == self.player and item.advancement, self.multiworld.itempool))
-        for item in prog_items:
-            self.multiworld.itempool.remove(item)
-        try:
-            fill_restrictive(self.multiworld, self.multiworld.get_all_state(False), spat_locations.copy(),
-                             prog_items.copy(), True)
-            # print("successfully filled spats!")
-            beatable = True
-        except FillError as e:
-            # print(">>> failed to fill spats")
-            reset_gate_rules(old_rules)
-            beatable = False
-        # Undo what was done
-        for item in prog_items:
-            item.location = None
-        for location in spat_locations:
-            location.item = None
-            location.locked = False
-            location.event = False
-        self.multiworld.itempool += prog_items
-        return beatable
-
-    def reroll_gate_costs(self):
-        print(f"Rerolling gate cost for Player {self.multiworld.get_player_name(self.player)} with randomize_gate_cost = {self.multiworld.randomize_gate_cost[self.player].value}")
-        randomize_gate_cost = self.multiworld.randomize_gate_cost[self.player].value
-        # get the 3 keys (prioritize hub connections and earlier connections and higher values)
-        weights = [5, 5, 15, 3, 3, 10, 1, 1, 0]
-        values = [v for _, v in self.gate_costs.items()]
-        weights = [round(x * (y / 5)) for x, y in zip(weights, values)]
-        k = 4
-        if randomize_gate_cost == 4:
-            keys = random.sample([k for k in self.gate_costs], counts=weights, k=k)
-            # print(keys)
-            for k in keys:
-                self.gate_costs[k] = self.multiworld.random.randint(0, self.gate_costs[k]-1)
-        else:
-            gate_cost_fact = 0.25 if randomize_gate_cost == 1 else 0.5 if randomize_gate_cost == 2 else 0.75
-            for k, v in self.gate_costs.items():
-                min_value = round(default_gate_costs[k] * (max(1 - gate_cost_fact, 0)))
-                if min_value < v:
-                    self.gate_costs[k] = self.multiworld.random.randint(min_value, v-1)
-
-        # print(self.gate_costs, min_value)
-
-    def roll_gate_costs(self):
-        randomize_gate_cost = self.multiworld.randomize_gate_cost[self.player].value
-        max_value = self.multiworld.available_spatulas[self.player].value
-        if max_value == 100 and not self.multiworld.include_socks[self.player].value and not \
-                self.multiworld.include_golden_underwear[self.player].value and not \
-                self.multiworld.include_level_items[self.player].value and not \
-                self.multiworld.include_purple_so[self.player].value:
-            max_value -= 2
-        if 0 < randomize_gate_cost < 4:
-            gate_cost_fact = 0.25 if randomize_gate_cost == 1 else 0.5 if randomize_gate_cost == 2 else 0.75
-            for k, v in self.gate_costs.items():
-                self.gate_costs[k] = min(self.multiworld.random.randint(round(v * (max(1 - gate_cost_fact, 0))),
-                                                                        round(v * (1 + gate_cost_fact))),
-                                         max_value)
-        elif randomize_gate_cost == 4:
-            for k, v in self.gate_costs.items():
-                self.gate_costs[k] = self.multiworld.random.randint(0, max_value)
-
-        # print(randomize_gate_cost, self.gate_costs)
+        self.level_order = [ConnectionNames.hub1_bb01, ConnectionNames.hub1_gl01, ConnectionNames.hub1_b1,
+                            ConnectionNames.hub2_rb01, ConnectionNames.hub2_sm01, ConnectionNames.hub2_b2,
+                            ConnectionNames.hub3_kf01, ConnectionNames.hub3_gy01, ConnectionNames.cb_b3]
 
     def generate_early(self) -> None:
-        self.roll_gate_costs()
-
-    def pre_fill(self) -> None:
         if self.multiworld.randomize_gate_cost[self.player].value > 0:
-            max_tries = 20
-            tries = 0
-            while not self.test_gate_cost_beatable() and tries < max_tries:
-                # print(f"reroll gate costs try {tries + 1}")
-                self.reroll_gate_costs()
-                tries = tries + 1
-                if tries >= max_tries:
-                    raise FillError(
-                        f"failed to find beatable gate costs after {max_tries} with randomize_gate_cost = {self.multiworld.randomize_gate_cost[self.player].value}")
+            print(self.multiworld.player_name[self.player], self.multiworld.randomize_gate_cost[self.player])
+            self.roll_level_order()
+            print(self.level_order)
+            self.set_gate_costs()
+            for k in self.level_order:
+                print(k, self.gate_costs[k])
+
+    def roll_level_order(self):
+        level_left = [ConnectionNames.hub1_bb01, ConnectionNames.hub1_gl01, ConnectionNames.hub2_rb01,
+                      ConnectionNames.hub2_sm01, ConnectionNames.hub3_kf01, ConnectionNames.hub3_gy01]
+        counts = [4,4,2,2, 1, 1]
+        cnt = len(level_left)
+        self.level_order = []
+        for i in range(0, cnt):
+            idx = self.random.sample(range(0, len(level_left)), k=1, counts=counts)[0]
+            level = level_left[idx]
+            if level in [ConnectionNames.hub2_rb01, ConnectionNames.hub2_sm01, ConnectionNames.hub3_kf01,
+                         ConnectionNames.hub3_gy01] and ConnectionNames.hub1_b1 not in self.level_order:
+                self.level_order.append(ConnectionNames.hub1_b1)
+            if level in [ConnectionNames.hub3_kf01,
+                         ConnectionNames.hub3_gy01] and ConnectionNames.hub2_b2 not in self.level_order:
+                self.level_order.append(ConnectionNames.hub2_b2)
+            self.level_order.append(level)
+            level_left.remove(level)
+            counts.remove(counts[idx])
+        self.level_order.append(ConnectionNames.cb_b3)
+
+    def set_gate_costs(self):
+        last_level = None
+        min_incs = [0, 2, 5]
+        last_cost = 1
+        for v in self.level_order:
+            level_inc_min = min_incs[
+                self.multiworld.randomize_gate_cost[self.player].value - 1] if v != ConnectionNames.cb_b3 else 5
+            level_inc_max = 8
+            if self.multiworld.include_socks[self.player].value:
+                level_inc_max += 6
+            if self.multiworld.include_level_items[self.player].value:
+                level_inc_max += 3
+            if self.multiworld.include_purple_so[self.player].value:
+                level_inc_max += 1
+            if self.multiworld.randomize_gate_cost[self.player].value == 3:
+                level_inc_max = round(level_inc_max * 1.35)
+            elif self.multiworld.randomize_gate_cost[self.player].value == 1:
+                level_inc_max = round(level_inc_max * 0.75)
+            # set max increment after boss to 1
+            if last_level is not None and last_level in [ConnectionNames.hub1_b1, ConnectionNames.hub2_b2]:
+                level_inc_max = 1
+            level_inc_min = min(level_inc_min, level_inc_max)
+            cost = min(self.random.randint(level_inc_min, level_inc_max) + last_cost, self.multiworld.available_spatulas[self.player].value)
+            self.gate_costs[v] = cost
+            last_level = v
+            last_cost = cost
+
+    def get_filler_item_name(self) -> str:
+        return ItemNames.so_100
 
     def get_items(self):
         filler_items = [ItemNames.so_100, ItemNames.so_250]
