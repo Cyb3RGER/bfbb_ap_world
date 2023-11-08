@@ -65,5 +65,4 @@ bfbb_options: typing.Dict[str, AssembleOptions] = {
     "include_purple_so": IncludePurpleSO,
     "randomize_gate_cost": RandomizeGateCost,
     "death_link": DeathLink,
-
 }

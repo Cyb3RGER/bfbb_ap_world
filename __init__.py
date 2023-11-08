@@ -90,7 +90,7 @@ class BattleForBikiniBottom(World):
     def roll_level_order(self):
         level_left = [ConnectionNames.hub1_bb01, ConnectionNames.hub1_gl01, ConnectionNames.hub2_rb01,
                       ConnectionNames.hub2_sm01, ConnectionNames.hub3_kf01, ConnectionNames.hub3_gy01]
-        counts = [4,4,2,2, 1, 1]
+        counts = [4, 4, 2, 2, 1, 1]
         cnt = len(level_left)
         self.level_order = []
         for i in range(0, cnt):
@@ -129,7 +129,8 @@ class BattleForBikiniBottom(World):
             if last_level is not None and last_level in [ConnectionNames.hub1_b1, ConnectionNames.hub2_b2]:
                 level_inc_max = 1
             level_inc_min = min(level_inc_min, level_inc_max)
-            cost = min(self.random.randint(level_inc_min, level_inc_max) + last_cost, self.multiworld.available_spatulas[self.player].value)
+            cost = min(self.random.randint(level_inc_min, level_inc_max) + last_cost,
+                       self.multiworld.available_spatulas[self.player].value)
             self.gate_costs[v] = cost
             last_level = v
             last_cost = cost

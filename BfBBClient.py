@@ -897,25 +897,26 @@ def _give_item(ctx: BfBBContext, item_id: int):
 
 
 def update_delayed_items(ctx: BfBBContext):
-    balloon_count = dolphin_memory_engine.read_byte(BALLOON_KID_COUNT_ADDR)
-    _set_counter_value(ctx, BALLOON_KID_COUNTER_ID, max(5 - balloon_count, 0))
-    if balloon_count >= 5:
-        _set_taskbox_success(ctx, BALLOON_KID_TASKBOX_ID)
-    sandman_count = dolphin_memory_engine.read_byte(SANDMAN_COUNT_ADDR)
-    _set_counter_value(ctx, SANDMAN_CNTR_ID, max(8 - sandman_count, 0))
-    if sandman_count >= 8:
-        _set_pickup_active(ctx, SANDMAN_SOCK_ID)
-    power_crystal_count = dolphin_memory_engine.read_byte(POWER_CRYSTAL_COUNT_ADDR)
-    _set_counter_value(ctx, POWERCRYSTAL_COUNTER_ID, power_crystal_count)
-    if power_crystal_count >= 6:
-        for v in POWERCRYSTAL_TASKBOX_IDS:
-            _set_taskbox_success(ctx, v)
-    cannon_button_count = dolphin_memory_engine.read_byte(CANNON_BUTTON_COUNT_ADDR)
-    if cannon_button_count >= 4:
-        _set_pickup_active(ctx, CANNON_BUTTON_SPAT_ID)
-        _set_plat_active(ctx, CANNON_BUTTON_PLAT_IDS[0])
-        _set_plat_inactive(ctx, CANNON_BUTTON_PLAT_IDS[1])
-        # _set_plat_inactive(ctx, CANNON_BUTTON_PLAT_IDS[2])
+    if CheckTypes.LEVEL_ITEMS in ctx.included_check_types:
+        balloon_count = dolphin_memory_engine.read_byte(BALLOON_KID_COUNT_ADDR)
+        _set_counter_value(ctx, BALLOON_KID_COUNTER_ID, max(5 - balloon_count, 0))
+        if balloon_count >= 5:
+            _set_taskbox_success(ctx, BALLOON_KID_TASKBOX_ID)
+        sandman_count = dolphin_memory_engine.read_byte(SANDMAN_COUNT_ADDR)
+        _set_counter_value(ctx, SANDMAN_CNTR_ID, max(8 - sandman_count, 0))
+        if sandman_count >= 8:
+            _set_pickup_active(ctx, SANDMAN_SOCK_ID)
+        power_crystal_count = dolphin_memory_engine.read_byte(POWER_CRYSTAL_COUNT_ADDR)
+        _set_counter_value(ctx, POWERCRYSTAL_COUNTER_ID, power_crystal_count)
+        if power_crystal_count >= 6:
+            for v in POWERCRYSTAL_TASKBOX_IDS:
+                _set_taskbox_success(ctx, v)
+        cannon_button_count = dolphin_memory_engine.read_byte(CANNON_BUTTON_COUNT_ADDR)
+        if cannon_button_count >= 4:
+            _set_pickup_active(ctx, CANNON_BUTTON_SPAT_ID)
+            _set_plat_active(ctx, CANNON_BUTTON_PLAT_IDS[0])
+            _set_plat_inactive(ctx, CANNON_BUTTON_PLAT_IDS[1])
+            # _set_plat_inactive(ctx, CANNON_BUTTON_PLAT_IDS[2])
 
 
 async def give_items(ctx: BfBBContext):
@@ -1246,7 +1247,7 @@ def main(connect=None, password=None, patch_file=None):
     # Text Mode to use !hint and such with games that have no text entry
     Utils.init_logging("BfBBClient")
 
-    logger.warning(f"starting {connect}, {password}, {patch_file}")
+    # logger.warning(f"starting {connect}, {password}, {patch_file}")
 
     options = Utils.get_options()
 
