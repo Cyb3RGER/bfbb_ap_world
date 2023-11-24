@@ -16,13 +16,13 @@ from .names import ConnectionNames
 
 BFBB_HASH = "9e18f9a0032c4f3092945dc38a6517d3"
 
-
 class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
     hash = BFBB_HASH
     game = "Battle for Bikini Bottom"
     patch_file_ending: str = ".apbfbb"
     result_file_ending: str = ".gcm"
     zip_version: int = 1
+    logger = logging.getLogger("BfBBPatch")
 
     def __init__(self, *args: Any, **kwargs: Any):
         self.include_socks: int = kwargs['include_socks']
@@ -79,21 +79,21 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
     @classmethod
     def get_int(cls, opened_zipfile: zipfile.ZipFile, name: str):
         if name not in opened_zipfile.namelist():
-            logging.warning(f"couldn't find {name} in patch file")
+            cls.logger.warning(f"couldn't find {name} in patch file")
             return 0
         return int.from_bytes(opened_zipfile.read(name), "little")
 
     @classmethod
     def get_bool(cls, opened_zipfile: zipfile.ZipFile, name: str):
         if name not in opened_zipfile.namelist():
-            logging.warning(f"couldn't find {name} in patch file")
+            cls.logger.warning(f"couldn't find {name} in patch file")
             return False
         return bool.from_bytes(opened_zipfile.read(name), "little")
 
     @classmethod
     def get_json_obj(cls, opened_zipfile: zipfile.ZipFile, name: str):
         if name not in opened_zipfile.namelist():
-            logging.warning(f"couldn't find {name} in patch file")
+            cls.logger.warning(f"couldn't find {name} in patch file")
             return None
         with opened_zipfile.open(name, "r") as f:
             obj = json.load(f)
@@ -123,11 +123,12 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
                         try:
                             world_zip.extract(file, lib_path)
                         except:
-                            print(f"warning: couldn't overwrite dependency: {file}")
+                            cls.logger.warning(f"warning: couldn't overwrite dependency: {file}")
             lib_path = lib_path + 'bfbb/inc/'
-        if not lib_path in sys.path:
+        if lib_path not in sys.path:
             sys.path.append(lib_path)
         # print(sys.path)
+        cls.logger.debug('--before pythonnet.load--')
         # setup pythonnet
         from packages.pythonnet import load
         load()
@@ -139,14 +140,14 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         gcm.read_entire_disc()
         generator = gcm.export_disc_to_folder_with_changed_files(output_folder_path=extraction_path,
                                                                  only_changed_files=False)
-        print('--extracting--')
+        cls.logger.info('--extracting--')
         while True:
             file_path, files_done = next(generator)
-            print(file_path, files_done)
+            # cls.logger.debug((file_path, files_done))
             if files_done == -1:
                 break
-        print('--extraction done--')
-        print('--making changes--')
+        cls.logger.info('--extraction done--')
+        cls.logger.info('--making changes--')
         # load and setup IP libs
         clr.AddReference(os.path.abspath(lib_path + '/IP/IndustrialPark.dll'))
         clr.AddReference(os.path.abspath(lib_path + '/IP/HipHopFile.dll'))
@@ -170,10 +171,9 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
                     # Extract all files to a directory (change the path accordingly)
                     zip_ref.extractall(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/')
 
-                print("File successfully downloaded and extracted editor files.")
+                cls.logger.info("File successfully downloaded and extracted editor files.")
             else:
-                print("Failed to download editor file.")
-
+                cls.logger.warning("Failed to download editor file.")
 
         class EventIDs(Enum):
             Increment = 0x000B
@@ -399,7 +399,7 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
                     found = False
                     for link in links:
                         if data.compare(link):
-                            print(f"removing link {link.ToString()} from 0x{id:x} in {name}.HIP")
+                            # cls.logger.debug(f"removing link {link.ToString()} from 0x{id:x} in {name}.HIP")
                             links_to_remove.append(link)
                             found = True
                     if not found:
@@ -423,23 +423,23 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
             if editor_funcs.ShuffleSpatulaGatesHB08(gate_costs[ConnectionNames.cb_b3]):
                 editor_funcs.ImportNumbers()
             editor_funcs.Save()
-        print('--done making changes--')
+        cls.logger.info('--done making changes--')
         # repack ISO (as gcm for better distinction)
-        print('--repacking--')
+        cls.logger.info('--repacking--')
         num = gcm.import_all_files_from_disk(input_directory=extraction_path)
         generator = gcm.export_disc_to_iso_with_changed_files(dest_iso)
         while True:
             file_path, files_done = next(generator)
-            print(file_path, files_done)
+            # cls.logger.debug((file_path, files_done))
             if files_done == -1:
                 break
-        print('--repacking done--')
+        cls.logger.info('--repacking done--')
         # clean up
         extraction_temp_dir.cleanup()
 
     @classmethod
     async def apply_binary_changes(cls, opened_zipfile: zipfile.ZipFile, iso):
-        print('--binary patching--')
+        cls.logger.info('--binary patching--')
         # get slot name and seed hash
         manifest = BfBBDeltaPatch.get_json_obj(opened_zipfile, "archipelago.json")
         slot_name = manifest["player_name"]
@@ -462,29 +462,31 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         with open(iso, "rb+") as stream:
             # write patches
             for patch in patches:
-                print(f"applying patch {patches.index(patch) + 1}/{len(patches)}")
+                cls.logger.info(f"applying patch {patches.index(patch) + 1}/{len(patches)}")
                 for addr, val in patch.items():
                     stream.seek(addr, 0)
-                    if type(val) == bytes:
+                    if isinstance(val, bytes):
                         stream.write(val)
                     else:
                         stream.write(val.to_bytes(0x4, "big"))
             # write slot name
-            print(f"writing slot_name {slot_name} to 0x{slot_name_offset:x} ({slot_name_bytes})")
+            cls.logger.debug(f"writing slot_name {slot_name} to 0x{slot_name_offset:x} ({slot_name_bytes})")
             stream.seek(slot_name_offset, 0)
             stream.write(slot_name_bytes)
-            print(f"writing seed_hash {seed_hash} to 0x{seed_hash_offset:x}")
+            cls.logger.debug(f"writing seed_hash {seed_hash} to 0x{seed_hash_offset:x}")
             stream.seek(seed_hash_offset, 0)
             stream.write(seed_hash)
-        print('--binary patching done--')
+        cls.logger.info('--binary patching done--')
 
     @classmethod
     def get_rom_path(cls) -> str:
         return get_base_rom_path()
 
     @classmethod
-    def get_source_data(cls) -> bytes:
-        return get_base_rom_bytes()
+    def check_hash(cls):
+        if not validate_hash():
+            Exception(f"Supplied Base Rom does not match known MD5 for BfBB (US). "
+                      "Get the correct game and version.")
 
     @classmethod
     def check_version(cls, opened_zipfile: zipfile.ZipFile) -> bool:
@@ -507,13 +509,10 @@ def get_base_rom_path(file_name: str = "") -> str:
     return file_name
 
 
-def get_base_rom_bytes(file_name: str = ""):
+def validate_hash(file_name: str = ""):
     file_name = get_base_rom_path(file_name)
     with open(file_name, "rb") as file:
         base_rom_bytes = bytes(file.read())
     basemd5 = hashlib.md5()
     basemd5.update(base_rom_bytes)
-    if BFBB_HASH != basemd5.hexdigest():
-        raise Exception(f"Supplied Base Rom does not match known MD5 for BfBB (US). "
-                        "Get the correct game and version.")
-    return base_rom_bytes
+    return BFBB_HASH == basemd5.hexdigest()

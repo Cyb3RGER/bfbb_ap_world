@@ -1230,16 +1230,20 @@ async def patch_and_run_game(ctx: BfBBContext, patch_file):
                     "apbfbb version doesn't match this client.  Make sure your generator and client are the same")
                 raise Exception("apbfbb version doesn't match this client.")
 
+        # check hash
+        BfBBDeltaPatch.check_hash()
+
         shutil.copy(BfBBDeltaPatch.get_rom_path(), result_path)
         await BfBBDeltaPatch.apply_hiphop_changes(zipfile.ZipFile(patch_file, 'r'), BfBBDeltaPatch.get_rom_path(),
                                                   result_path)
         await BfBBDeltaPatch.apply_binary_changes(zipfile.ZipFile(patch_file, 'r'), result_path)
 
-        print('--patching success--')
+        logger.info('--patching success--')
         os.startfile(result_path)
 
     except Exception as msg:
         logger.info(msg, extra={'compact_gui': True})
+        logger.debug(traceback.format_exc())
         ctx.gui_error('Error', msg)
 
 
@@ -1257,17 +1261,23 @@ def main(connect=None, password=None, patch_file=None):
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
-        ctx.dolphin_sync_task = asyncio.create_task(dolphin_sync_task(ctx), name="DolphinSync")
 
         if patch_file:
             ext = os.path.splitext(patch_file)[1]
             if ext == BfBBDeltaPatch.patch_file_ending:
                 logger.info("apbfbb file supplied, beginning patching process...")
-                Utils.async_start(patch_and_run_game(ctx, patch_file))
+                ctx.patch_task = asyncio.create_task(patch_and_run_game(ctx, patch_file), name="PatchGame")
             elif ext == BfBBDeltaPatch.result_file_ending:
                 os.startfile(patch_file)
             else:
                 logger.warning(f"Unknown patch file extension {ext}")
+
+        if ctx.patch_task:
+            await ctx.patch_task
+
+        await asyncio.sleep(1)
+
+        ctx.dolphin_sync_task = asyncio.create_task(dolphin_sync_task(ctx), name="DolphinSync")
 
         await ctx.exit_event.wait()
         ctx.server_address = None
