@@ -578,6 +578,7 @@ class BfBBContext(CommonContext):
         self.last_rev_index = -1
         self.has_send_death = False
         self.last_death_link_send = time.time()
+        self.current_scene_key = None
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
@@ -585,6 +586,8 @@ class BfBBContext(CommonContext):
 
     def on_package(self, cmd: str, args: dict):
         if cmd == 'Connected':
+            self.current_scene_key = f"bfbb_current_scene_T{self.team}_P{self.slot}"
+            self.set_notify(self.current_scene_key)
             self.last_rev_index = -1
             self.items_received_2 = []
             self.included_check_types = CheckTypes.SPAT
@@ -628,7 +631,6 @@ class BfBBContext(CommonContext):
             self.awaiting_rom = True
             logger.info('Awaiting connection to Dolphin to get player information')
             return
-
         await self.send_connect()
 
     def run_gui(self):
@@ -1121,7 +1123,27 @@ def check_ingame(ctx: BfBBContext, ignore_control_owner: bool = False) -> bool:
     scene = dolphin_memory_engine.read_bytes(scene_ptr, 0x4)
     if scene not in valid_scenes:
         return False
+    update_current_scene(ctx, scene.decode('ascii'))
     return True
+
+
+def update_current_scene(ctx: BfBBContext, scene: str):
+    if not ctx.slot and not ctx.auth:
+        return
+    if ctx.current_scene_key is None or ctx.current_scene_key not in ctx.stored_data:
+        return
+    if ctx.stored_data[ctx.current_scene_key] == scene:
+        return
+    Utils.async_start(ctx.send_msgs([{
+        "cmd": "Set",
+        "key": ctx.current_scene_key,
+        "default": None,
+        "want_reply": True,
+        "operations": [{
+            "operation": "replace",
+            "value": scene,
+        }],
+    }]))
 
 
 def check_control_owner(ctx: BfBBContext, check_cb: Callable[[int], bool]) -> bool:
@@ -1169,6 +1191,8 @@ async def dolphin_sync_task(ctx: BfBBContext):
                         await ctx.disconnect()
                         await asyncio.sleep(5)
                         continue
+                    ctx.current_scene_key = f"bfbb_current_scene_T{ctx.team}_P{ctx.slot}"
+                    ctx.set_notify(ctx.current_scene_key)
                     if "DeathLink" in ctx.tags:
                         await check_death(ctx)
                     await give_items(ctx)
@@ -1262,6 +1286,7 @@ def main(connect=None, password=None, patch_file=None):
             ctx.run_gui()
         ctx.run_cli()
 
+        ctx.patch_task = None
         if patch_file:
             ext = os.path.splitext(patch_file)[1]
             if ext == BfBBDeltaPatch.patch_file_ending:
