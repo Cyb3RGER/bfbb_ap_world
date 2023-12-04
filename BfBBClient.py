@@ -802,9 +802,11 @@ def _set_taskbox_success(ctx: BfBBContext, task_info: Tuple[bytes, int]):
         return
     state_addr = obj_ptr + 0x18
     state = dolphin_memory_engine.read_word(state_addr)
-    if state < 3:
+    enabled_ptr = obj_ptr + 0x10
+    enabled = dolphin_memory_engine.read_byte(enabled_ptr)
+    if 0 < state < 3 and enabled == 1:
         dolphin_memory_engine.write_word(state_addr, 3)
-        _set_trig_active(ctx, BALLOON_KID_SUC_TRIG_ID)
+        # _set_trig_active(ctx, BALLOON_KID_SUC_TRIG_ID)
 
 
 def _set_trig_active(ctx: BfBBContext, trig_info: Tuple[bytes, int]):
@@ -898,7 +900,9 @@ def _give_item(ctx: BfBBContext, item_id: int):
         logger.warning(f"Received unknown item with id {item_id}")
 
 
-def update_delayed_items(ctx: BfBBContext):
+async def update_delayed_items(ctx: BfBBContext):
+    if not await check_alive(ctx):
+        return
     if CheckTypes.LEVEL_ITEMS in ctx.included_check_types:
         balloon_count = dolphin_memory_engine.read_byte(BALLOON_KID_COUNT_ADDR)
         _set_counter_value(ctx, BALLOON_KID_COUNTER_ID, max(5 - balloon_count, 0))
@@ -922,7 +926,7 @@ def update_delayed_items(ctx: BfBBContext):
 
 
 async def give_items(ctx: BfBBContext):
-    update_delayed_items(ctx)
+    await update_delayed_items(ctx)
     expected_idx = dolphin_memory_engine.read_word(EXPECTED_INDEX_ADDR)
     # we need to loop some items
     for item, idx in ctx.items_received_2:
@@ -1105,6 +1109,10 @@ async def check_locations(ctx: BfBBContext):
              "locations": locations_checked}
         ])
 
+
+async def check_alive(ctx: BfBBContext):
+    cur_health = dolphin_memory_engine.read_word(HEALTH_ADDR)
+    return not (cur_health <= 0 or check_control_owner(ctx, lambda owner: owner & 0x4))
 
 async def check_death(ctx: BfBBContext):
     cur_health = dolphin_memory_engine.read_word(HEALTH_ADDR)
