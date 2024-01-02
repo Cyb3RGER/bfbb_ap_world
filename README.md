@@ -21,7 +21,6 @@ See the [setup guide](https://github.com/Cyb3RGER/bfbb_ap_world/blob/main/docs/s
   file.
 - Rarely items will be sent again when loading a save (because of a race condition). Just reloading the save should fix
   that.
-- The BfBB Client is on the wrong side in the Launcher.
 - The BfBB Client becomes unresponsive when patching.
 - Some Dependency creates ``laxtab.py`` and ``yacctab.py`` in the CWD. If you notice them you can just delete or ignore
   them.

@@ -1,16 +1,19 @@
+import typing
 from typing import Callable, Dict, List, Tuple
 
 from BaseClasses import MultiWorld, CollectionState, Entrance
 from worlds.AutoWorld import LogicMixin
+from . import BfBBOptions
 from .names import ConnectionNames, ItemNames, LocationNames, RegionNames
 from worlds.generic.Rules import set_rule, add_rule, CollectionRule
 
 
 def can_farm_so(state: CollectionState, player: int) -> bool:
-    # ToDo: this needs to check for death link
-    return not state.multiworld.death_link[player].value and (
-            state.can_reach(RegionNames.gl01, "Region", player) and state.has(ItemNames.cruise_bubble, player) or \
-            state.can_reach(RegionNames.db02, "Region", player))
+    return not state.multiworld.worlds[player].options.death_link and (
+            state.can_reach(RegionNames.gl01, "Region", player) and
+            state.has(ItemNames.cruise_bubble, player) or
+            state.can_reach(RegionNames.db02, "Region", player)
+    )
 
 
 class BfBBLogic(LogicMixin):
@@ -74,6 +77,7 @@ sock_rules = [
             LocationNames.spat_ps_06: lambda player: lambda state: state.has(ItemNames.sock, player, 60),
             LocationNames.spat_ps_07: lambda player: lambda state: state.has(ItemNames.sock, player, 70),
             LocationNames.spat_ps_08: lambda player: lambda state: state.has(ItemNames.sock, player, 80),
+            # ToDo: we need rules for pat spatulas here for if socks are disabled
         }
     }
 ]
@@ -189,7 +193,7 @@ so_krabs_rules = [
     # locations
     {
         ItemNames.spat: {
-            LocationNames.spat_ks_01: lambda player: lambda state: state.has_so_amount(player, 3000 / 2),
+            LocationNames.spat_ks_01: lambda player: lambda state: state.has_so_amount(player, 30100 / 2),
             LocationNames.spat_ks_02: lambda player: lambda state: state.has_so_amount(player, 6500 / 2),
             LocationNames.spat_ks_03: lambda player: lambda state: state.has_so_amount(player, 10500 / 2),
             LocationNames.spat_ks_04: lambda player: lambda state: state.has_so_amount(player, 15000 / 2),
@@ -243,29 +247,29 @@ def set_gate_rules(player: int, gate_costs: Dict[Entrance, int]):
     return old_rules
 
 
-def set_rules(world: MultiWorld, player: int, gate_costs):
+def set_rules(world: MultiWorld, options: BfBBOptions, player: int, gate_costs: typing.Dict[str, int]):
     allowed_loc_types = [ItemNames.spat]
-    if world.include_socks[player].value:
+    if options.include_socks.value:
         allowed_loc_types += [ItemNames.sock]
     # if world.include_skills[player].value:
     #     allowed_loc_types += [ItemNames.skills]
-    if world.include_golden_underwear[player].value:
+    if options.include_golden_underwear.value:
         allowed_loc_types += [ItemNames.golden_underwear]
-    if world.include_level_items[player].value:
+    if options.include_level_items.value:
         allowed_loc_types += [ItemNames.lvl_itm]
-    if world.include_purple_so[player].value:
+    if options.include_purple_so.value:
         allowed_loc_types += [ItemNames.so_purple]
 
     _add_rules(world, player, spat_rules, allowed_loc_types)
-    if world.include_socks[player].value:
+    if options.include_socks.value:
         _add_rules(world, player, sock_rules, allowed_loc_types)
-    if world.include_skills[player].value:
+    if options.include_skills.value:
         _add_rules(world, player, skill_rules, allowed_loc_types)
-    if world.include_golden_underwear[player].value:
+    if options.include_golden_underwear.value:
         _add_rules(world, player, golden_underwear_rules, allowed_loc_types)
-    if world.include_level_items[player].value:
+    if options.include_level_items.value:
         _add_rules(world, player, lvl_itm_rules, allowed_loc_types)
-    if world.include_purple_so[player].value:
+    if options.include_purple_so.value:
         _set_rules(world, player, so_krabs_rules, allowed_loc_types)  # we override krabs requirements here
 
     set_gate_rules(player, {world.get_entrance(k, player): v for k, v in gate_costs.items()})

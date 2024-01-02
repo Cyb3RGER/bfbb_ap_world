@@ -1,5 +1,6 @@
 from typing import List, Dict
 
+from . import BfBBOptions
 from .Locations import BfBBLocation, location_table, \
     sock_location_table, spat_location_table, level_item_location_table, golden_underwear_location_table, \
     skill_location_table, purple_so_location_table
@@ -16,26 +17,26 @@ def create_region(world: MultiWorld, player: int, name: str, locations=None, exi
             location = BfBBLocation(player, location, loc_id, ret)
             ret.locations.append(location)
     if exits:
-        for exit in exits:
-            ret.exits.append(Entrance(player, exit, ret))
+        for _exit in exits:
+            ret.exits.append(Entrance(player, _exit, ret))
     return ret
 
 
-def _get_locations_for_region(world, player: int, name: str) -> List[str]:
+def _get_locations_for_region(options: BfBBOptions, name: str) -> List[str]:
     result = [k for k in spat_location_table if f"{name}:" in k]
     if name == RegionNames.hub1:
         result += [k for k in spat_location_table if f"{LevelNames.hub}:" in k]
     if name == RegionNames.b3:
         result += [LocationNames.credits]
-    if world.include_socks[player].value:
+    if options.include_socks.value:
         result += [k for k in sock_location_table if f"{name}:" in k]
-    if world.include_skills[player].value:
+    if options.include_skills.value:
         result += [k for k in skill_location_table if f"{name}:" in k]
-    if world.include_golden_underwear[player].value and "Hub" in name:
+    if options.include_golden_underwear.value and "Hub" in name:
         result += [k for k in golden_underwear_location_table if f"{name}:" in k]
-    if world.include_level_items[player].value:
+    if options.include_level_items.value:
         result += [k for k in level_item_location_table if f"{name}:" in k]
-    if world.include_purple_so[player].value:
+    if options.include_purple_so.value:
         result += [k for k in purple_so_location_table if f"{name}:" in k]
     return result
 
@@ -102,10 +103,10 @@ exit_table: Dict[str, List[str]] = {
 }
 
 
-def create_regions(world: MultiWorld, player: int):
+def create_regions(world: MultiWorld, options: BfBBOptions, player: int):
     # create regions
     world.regions += [
-        create_region(world, player, k, _get_locations_for_region(world, player, k), v) for k, v in exit_table.items()
+        create_region(world, player, k, _get_locations_for_region(options, k), v) for k, v in exit_table.items()
     ]
 
     # connect regions
@@ -113,9 +114,9 @@ def create_regions(world: MultiWorld, player: int):
     for k, v in exit_table.items():
         if k == RegionNames.menu:
             continue
-        for exit in v:
-            exit_regions = exit.split('->')
+        for _exit in v:
+            exit_regions = _exit.split('->')
             assert len(exit_regions) == 2
             # ToDo: warp rando
             target = world.get_region(exit_regions[1], player)
-            world.get_entrance(exit, player).connect(target)
+            world.get_entrance(_exit, player).connect(target)

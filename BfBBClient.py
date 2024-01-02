@@ -1103,16 +1103,17 @@ async def check_locations(ctx: BfBBContext):
     # ignore already in server state
     locations_checked = ctx.locations_checked.difference(ctx.checked_locations)
     if locations_checked:
-        print([ctx.location_names[location] for location in locations_checked])
         await ctx.send_msgs([
             {"cmd": "LocationChecks",
              "locations": locations_checked}
         ])
+        print([ctx.location_names[location] for location in locations_checked])
 
 
 async def check_alive(ctx: BfBBContext):
     cur_health = dolphin_memory_engine.read_word(HEALTH_ADDR)
     return not (cur_health <= 0 or check_control_owner(ctx, lambda owner: owner & 0x4))
+
 
 async def check_death(ctx: BfBBContext):
     cur_health = dolphin_memory_engine.read_word(HEALTH_ADDR)
@@ -1284,8 +1285,6 @@ def main(connect=None, password=None, patch_file=None):
     Utils.init_logging("BfBBClient")
 
     # logger.warning(f"starting {connect}, {password}, {patch_file}")
-
-    options = Utils.get_options()
 
     async def _main(connect, password, patch_file):
         ctx = BfBBContext(connect, password)

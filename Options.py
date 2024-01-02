@@ -1,8 +1,7 @@
-import typing
-from Options import Toggle, DeathLink, Range, AssembleOptions, Choice
+from dataclasses import dataclass
 
+from Options import Toggle, DeathLink, Range, Choice, PerGameCommonOptions
 
-# ToDo
 
 class AvailableSpatulas(Range):
     """Amount of available golden spatulas"""
@@ -10,6 +9,14 @@ class AvailableSpatulas(Range):
     range_start = 75
     range_end = 100
     default = 100
+
+
+class RequiredSpatulas(Range):
+    """Amount of golden spatulas required to enter the last boss fight"""
+    display_name = "Required Spatulas"
+    range_start = 1
+    range_end = 99
+    default = 75
 
 
 class IncludeSocks(Toggle):
@@ -47,6 +54,7 @@ class RandomizeGateCost(Choice):
     This will pick a random level order and increment on gate cost according to the level order.
     Low, mid and high refer to possible increment between levels.
     High will likely fail to generate on single player seeds or seeds with few filler locations.
+    All gate cost will be below the required spatula count.
     """
     display_name = "Randomize Gate Cost"
     option_off = 0
@@ -56,13 +64,14 @@ class RandomizeGateCost(Choice):
     default = 0
 
 
-bfbb_options: typing.Dict[str, AssembleOptions] = {
-    "available_spatulas": AvailableSpatulas,
-    "include_socks": IncludeSocks,
-    "include_skills": IncludeSkills,
-    "include_golden_underwear": IncludeGoldenUnderwear,
-    "include_level_items": IncludeLevelItems,
-    "include_purple_so": IncludePurpleSO,
-    "randomize_gate_cost": RandomizeGateCost,
-    "death_link": DeathLink,
-}
+@dataclass
+class BfBBOptions(PerGameCommonOptions):
+    available_spatulas: AvailableSpatulas
+    required_spatulas: RequiredSpatulas
+    include_socks: IncludeSocks
+    include_skills: IncludeSkills
+    include_golden_underwear: IncludeGoldenUnderwear
+    include_level_items: IncludeLevelItems
+    include_purple_so: IncludePurpleSO
+    randomize_gate_cost: RandomizeGateCost
+    death_link: DeathLink

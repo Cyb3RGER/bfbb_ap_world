@@ -419,10 +419,10 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
                                                     gate_costs[ConnectionNames.hub3_gy01]):
                 editor_funcs.ImportNumbers()
             editor_funcs.Save()
-            editor_funcs.OpenFile(extraction_path + f'/files/hb/hb08.HIP', False, Platform.Unknown)
-            if editor_funcs.ShuffleSpatulaGatesHB08(gate_costs[ConnectionNames.cb_b3]):
-                editor_funcs.ImportNumbers()
-            editor_funcs.Save()
+        editor_funcs.OpenFile(extraction_path + f'/files/hb/hb08.HIP', False, Platform.Unknown)
+        if editor_funcs.ShuffleSpatulaGatesHB08(gate_costs[ConnectionNames.cb_b3]):
+            editor_funcs.ImportNumbers()
+        editor_funcs.Save()
         cls.logger.info('--done making changes--')
         # repack ISO (as gcm for better distinction)
         cls.logger.info('--repacking--')

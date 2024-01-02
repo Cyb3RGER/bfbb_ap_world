@@ -317,7 +317,7 @@ purple_so_location_table = {
 
 }
 
-location_table = {
+location_table: typing.Dict[str, typing.Optional[int]] = {
     **spat_location_table,  # 0 - 99
     **sock_location_table,  # 100 - 179
     **golden_underwear_location_table,  # 180 - 182
@@ -327,4 +327,4 @@ location_table = {
     LocationNames.credits: None
 }
 
-lookup_id_to_name: typing.Dict[int, str] = {id: name for name, id in location_table.items()}
+lookup_id_to_name: typing.Dict[int, str] = {_id: name for name, _id in location_table.items()}
