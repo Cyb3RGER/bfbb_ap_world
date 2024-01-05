@@ -25,9 +25,9 @@ base_id = 149000
 
 item_table = {
     # spats
-    ItemNames.spat: ItemData(base_id + 0, ItemClassification.progression_skip_balancing),
+    ItemNames.spat: ItemData(base_id + 0, ItemClassification.progression),
     # socks
-    ItemNames.sock: ItemData(base_id + 1, ItemClassification.progression_skip_balancing),
+    ItemNames.sock: ItemData(base_id + 1, ItemClassification.progression),
     # shiny objects rewards
     ItemNames.so_100: ItemData(base_id + 2, ItemClassification.filler),
     ItemNames.so_250: ItemData(base_id + 3, ItemClassification.filler),

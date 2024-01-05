@@ -4,7 +4,7 @@ from multiprocessing import Process
 from typing import TextIO
 
 import Utils
-from BaseClasses import Item, Tutorial
+from BaseClasses import Item, Tutorial, ItemClassification
 from worlds.AutoWorld import World, WebWorld
 from worlds.LauncherComponents import Component, components, Type, SuffixIdentifier
 from .Events import create_events
@@ -78,6 +78,8 @@ class BattleForBikiniBottom(World):
                                               ConnectionNames.hub2_sm01, ConnectionNames.hub2_b2,
                                               ConnectionNames.hub3_kf01, ConnectionNames.hub3_gy01,
                                               ConnectionNames.cb_b3]
+        self.spat_counter: int = 0
+        self.sock_counter: int = 0
 
     def generate_early(self) -> None:
         if self.options.required_spatulas.value > self.options.available_spatulas.value:
@@ -199,9 +201,20 @@ class BattleForBikiniBottom(World):
             "gate_costs": self.gate_costs
         }
 
-    def create_item(self, name: str) -> Item:
+    def create_item(self, name: str,) -> Item:
         item_data = item_table[name]
-        item = BfBBItem(name, item_data.classification, item_data.id, self.player)
+        classification = item_data.classification
+        if name == ItemNames.spat:
+            self.spat_counter += 1
+            if self.spat_counter > self.options.required_spatulas:
+                classification = ItemClassification.progression_skip_balancing
+        if name == ItemNames.sock:
+            self.sock_counter += 1
+            if self.sock_counter > 40:
+                classification = ItemClassification.progression_skip_balancing
+        item = BfBBItem(name, classification,
+                        item_data.id, self.player)
+
         return item
 
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
@@ -214,7 +227,7 @@ class BattleForBikiniBottom(World):
         patch = BfBBDeltaPatch(path=os.path.join(output_directory,
                                                  f"{self.multiworld.get_out_file_name_base(self.player)}{BfBBDeltaPatch.patch_file_ending}"),
                                player=self.player,
-                               player_name=self.multiworld.player_name[self.player],
+                               player_name=self.multiworld.get_player_name(self.player),
                                include_socks=bool(self.options.include_socks.value),
                                include_skills=bool(self.options.include_skills.value),
                                include_golden_underwear=bool(
