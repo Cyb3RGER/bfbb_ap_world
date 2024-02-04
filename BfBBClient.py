@@ -1030,7 +1030,7 @@ async def _check_objects_by_id(ctx: BfBBContext, locations_checked: set, id_tabl
         return
     size = dolphin_memory_engine.read_word(SCENE_OBJ_LIST_SIZE_ADDR)
     for k, v in id_table.items():
-        if k in locations_checked and k != base_id + 83 or ctx.finished_game:  # we need to check base_id + 83 for goal
+        if k in locations_checked and (k != base_id + 83 or ctx.finished_game):  # we need to check base_id + 83 for goal
             continue
         if v[0] is not None and v[0] != scene:
             continue
