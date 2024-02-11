@@ -7,7 +7,7 @@ class BfBBLocation(Location):
     game: str = "Battle for Bikini Bottom"
 
 
-base_id = 149000
+base_id = 1490000
 
 spat_location_table = {
     # Hub (0-7)

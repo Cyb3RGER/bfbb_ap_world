@@ -21,7 +21,7 @@ class BfBBItem(Item):
     game: str = "Battle for Bikini Bottom"
 
 
-base_id = 149000
+base_id = 1490000
 
 item_table = {
     # spats

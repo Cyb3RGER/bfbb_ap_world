@@ -92,7 +92,7 @@ SAVED_SEED_ADDR = SAVED_SLOT_NAME_ADDR + 0x40
 # remove Decrement BUTTON_COUNTER from gy03 BUTTON_DISPs
 # remove GivePowerUp from b101 DeathCutscene and b201 RoboPatrickNPC
 
-base_id = 149000
+base_id = 1490000
 
 SOCK_PICKUP_IDS = {
     (base_id + 100 + 0): (b'HB01', 0x39fe1ac4),  # behind trash
