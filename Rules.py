@@ -77,7 +77,7 @@ sock_rules = [
             LocationNames.spat_ps_06: lambda player: lambda state: state.has(ItemNames.sock, player, 60),
             LocationNames.spat_ps_07: lambda player: lambda state: state.has(ItemNames.sock, player, 70),
             LocationNames.spat_ps_08: lambda player: lambda state: state.has(ItemNames.sock, player, 80),
-            # ToDo: we need rules for pat spatulas here for if socks are disabled
+            # ToDo: we need rules for pat spatulas for if socks are disabled
         }
     }
 ]
@@ -93,6 +93,7 @@ skill_rules = [
         ConnectionNames.bc02_bc05: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         ConnectionNames.kf04_kf05: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         ConnectionNames.kf04_kf02: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
+        ConnectionNames.kf01_kf05: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
     },
     # locations
     {
