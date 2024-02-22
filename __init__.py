@@ -139,9 +139,11 @@ class BattleForBikiniBottom(World):
         return ItemNames.so_100
 
     def get_items(self):
-
         filler_items = [ItemNames.so_100, ItemNames.so_250]
         filler_weights = [1, 2]
+        if self.options.include_purple_so.value == 0:
+            filler_items += [ItemNames.so_500, ItemNames.so_750, ItemNames.so_1000]
+            filler_weights += [5, 3, 2]
         # Generate item pool
         itempool = [ItemNames.spat] * self.options.available_spatulas.value
         if 100 - self.options.available_spatulas.value > 0:
@@ -165,8 +167,8 @@ class BattleForBikiniBottom(World):
             itempool += [ItemNames.lvl_itm_gy] * 4
         if self.options.include_purple_so.value:
             so_items = [ItemNames.so_100, ItemNames.so_250, ItemNames.so_500, ItemNames.so_750, ItemNames.so_1000]
-            weights = [1, 2, 5, 3, 2]
-            itempool += self.random.choices(so_items, weights=weights, k=38)
+            so_weights = [1, 2, 5, 3, 2]
+            itempool += self.random.choices(so_items, weights=so_weights, k=38)
 
         # adjust for starting inv prog. items
         k = 0
@@ -212,6 +214,8 @@ class BattleForBikiniBottom(World):
             self.sock_counter += 1
             if self.sock_counter > 40:
                 classification = ItemClassification.progression_skip_balancing
+        if name in [ItemNames.so_500, ItemNames.so_750, ItemNames.so_1000] and self.options.include_purple_so == 0:
+            classification = ItemClassification.useful
         item = BfBBItem(name, classification,
                         item_data.id, self.player)
 
