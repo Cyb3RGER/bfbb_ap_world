@@ -34,6 +34,8 @@ CONNECTION_LOST_STATUS = "Dolphin Connection was lost. Please restart your emula
 CONNECTION_CONNECTED_STATUS = "Dolphin Connected"
 CONNECTION_INITIAL_STATUS = "Dolphin Connection has not been initiated"
 
+GAME_ID = b'GQPE78'
+
 SCENE_OBJ_LIST_PTR_ADDR = 0x803cb9ec
 SCENE_OBJ_LIST_SIZE_ADDR = 0x803cac08
 
@@ -1229,7 +1231,7 @@ async def dolphin_sync_task(ctx: BfBBContext):
                 logger.info("Attempting to connect to Dolphin")
                 dolphin_memory_engine.hook()
                 if dolphin_memory_engine.is_hooked():
-                    if dolphin_memory_engine.read_bytes(0x80000000, 6) == b'GQPE78':
+                    if dolphin_memory_engine.read_bytes(0x80000000, 6) == GAME_ID:
                         logger.info(CONNECTION_CONNECTED_STATUS)
                         ctx.dolphin_status = CONNECTION_CONNECTED_STATUS
                         ctx.locations_checked = set()

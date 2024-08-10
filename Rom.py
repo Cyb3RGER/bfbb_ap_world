@@ -512,7 +512,7 @@ def get_base_rom_path(file_name: str = "") -> str:
 def validate_hash(file_name: str = ""):
     file_name = get_base_rom_path(file_name)
     with open(file_name, "rb") as file:
-        base_rom_bytes = bytes(file.read())
+        base_rom_bytes = file.read()
     basemd5 = hashlib.md5()
     basemd5.update(base_rom_bytes)
     return BFBB_HASH == basemd5.hexdigest()

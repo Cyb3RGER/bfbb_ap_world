@@ -85,8 +85,7 @@ sock_rules = [
 skill_rules = [
     # connections
     {
-        ConnectionNames.hub2_b2: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) or state.has(
-            ItemNames.cruise_bubble, player),
+        ConnectionNames.hub2_b2: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) or state.has(ItemNames.cruise_bubble, player),
         ConnectionNames.cb_b3: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         ConnectionNames.bc01_bc02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
         ConnectionNames.bc02_bc03: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
@@ -98,9 +97,7 @@ skill_rules = [
     # locations
     {
         ItemNames.spat: {
-            LocationNames.spat_hb_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl,
-                                                                             player) or state.has(
-                ItemNames.cruise_bubble, player),
+            LocationNames.spat_hb_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) or state.has(ItemNames.cruise_bubble, player),
             LocationNames.spat_hb_03: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
             LocationNames.spat_bb_08: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
             LocationNames.spat_bc_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
@@ -110,22 +107,18 @@ skill_rules = [
             LocationNames.spat_gy_02: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
             LocationNames.spat_gy_03: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
             LocationNames.spat_db_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
-            LocationNames.spat_b3_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) and \
-                                                                   state.has(ItemNames.cruise_bubble, player),
+            LocationNames.spat_b3_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) and state.has(ItemNames.cruise_bubble, player),
         },
         ItemNames.sock: {
-            LocationNames.sock_jf01_06: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
+            LocationNames.sock_jf01_06: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) or state.has(ItemNames.cruise_bubble, player),
             LocationNames.sock_jf03_02: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
             LocationNames.sock_bb04_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
             LocationNames.sock_bc01_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
-            # ToDo: check in-game
             LocationNames.sock_kf01_03: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
             LocationNames.sock_kf04_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         },
         ItemNames.golden_underwear: {
-            LocationNames.golden_under_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl,
-                                                                                  player) or state.has(
-                ItemNames.cruise_bubble, player),
+            LocationNames.golden_under_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) or state.has(ItemNames.cruise_bubble, player),
             LocationNames.golden_under_03: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
         },
         ItemNames.lvl_itm: {
@@ -142,9 +135,7 @@ skill_rules = [
         },
         ItemNames.so_purple: {
             LocationNames.purple_so_bb04_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),
-            LocationNames.purple_so_bc01_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl,
-                                                                                    player) or state.has(
-                ItemNames.cruise_bubble, player),
+            LocationNames.purple_so_bc01_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player) or state.has(ItemNames.cruise_bubble, player),
             LocationNames.purple_so_bc02_01: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
             LocationNames.purple_so_bc02_02: lambda player: lambda state: state.has(ItemNames.bubble_bowl, player),
             LocationNames.purple_so_kf01_01: lambda player: lambda state: state.has(ItemNames.cruise_bubble, player),

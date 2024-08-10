@@ -1,3 +1,4 @@
+import itertools
 import os
 import typing
 from multiprocessing import Process
@@ -73,11 +74,9 @@ class BattleForBikiniBottom(World):
     def __init__(self, multiworld: "MultiWorld", player: int):
         super().__init__(multiworld, player)
         self.gate_costs: typing.Dict[str, int] = default_gate_costs.copy()
-        self.level_order: typing.List[str] = [ConnectionNames.hub1_bb01, ConnectionNames.hub1_gl01,
-                                              ConnectionNames.hub1_b1, ConnectionNames.hub2_rb01,
-                                              ConnectionNames.hub2_sm01, ConnectionNames.hub2_b2,
-                                              ConnectionNames.hub3_kf01, ConnectionNames.hub3_gy01,
-                                              ConnectionNames.cb_b3]
+        self.level_order: typing.List[str] = [ConnectionNames.hub1_bb01, ConnectionNames.hub1_gl01, ConnectionNames.hub1_b1,
+                                              ConnectionNames.hub2_rb01, ConnectionNames.hub2_sm01, ConnectionNames.hub2_b2,
+                                              ConnectionNames.hub3_kf01, ConnectionNames.hub3_gy01, ConnectionNames.cb_b3]
         self.spat_counter: int = 0
         self.sock_counter: int = 0
 
@@ -96,13 +95,14 @@ class BattleForBikiniBottom(World):
         cnt = len(level_left)
         self.level_order = []
         for i in range(0, cnt):
-            idx = self.random.sample(range(0, len(level_left)), k=1, counts=counts)[0]
+            choices = [*range(0, len(level_left))]
+            weighted_choices = list(itertools.chain.from_iterable([[choice] * count for choice, count in zip(choices, counts)]))
+            idx = self.random.choice(weighted_choices)
             level = level_left[idx]
             if level in [ConnectionNames.hub2_rb01, ConnectionNames.hub2_sm01, ConnectionNames.hub3_kf01,
                          ConnectionNames.hub3_gy01] and ConnectionNames.hub1_b1 not in self.level_order:
                 self.level_order.append(ConnectionNames.hub1_b1)
-            if level in [ConnectionNames.hub3_kf01,
-                         ConnectionNames.hub3_gy01] and ConnectionNames.hub2_b2 not in self.level_order:
+            if level in [ConnectionNames.hub3_kf01, ConnectionNames.hub3_gy01] and ConnectionNames.hub2_b2 not in self.level_order:
                 self.level_order.append(ConnectionNames.hub2_b2)
             self.level_order.append(level)
             level_left.remove(level)
@@ -125,7 +125,7 @@ class BattleForBikiniBottom(World):
                 level_inc_max = round(level_inc_max * 1.35)
             elif self.options.randomize_gate_cost.value == 1:
                 level_inc_max = round(level_inc_max * 0.75)
-            # set max increment after boss to 1
+            # set max increment after boss to 1/2
             if last_level is not None and last_level in [ConnectionNames.hub1_b1, ConnectionNames.hub2_b2]:
                 level_inc_max = 2 if self.options.include_skills else 1
             level_inc_min = min(level_inc_min, level_inc_max)
@@ -228,8 +228,7 @@ class BattleForBikiniBottom(World):
                 spoiler_handle.write(f"{k}: {v}\n")
 
     def generate_output(self, output_directory: str) -> None:
-        patch = BfBBDeltaPatch(path=os.path.join(output_directory,
-                                                 f"{self.multiworld.get_out_file_name_base(self.player)}{BfBBDeltaPatch.patch_file_ending}"),
+        patch = BfBBDeltaPatch(path=os.path.join(output_directory, f"{self.multiworld.get_out_file_name_base(self.player)}{BfBBDeltaPatch.patch_file_ending}"),
                                player=self.player,
                                player_name=self.multiworld.get_player_name(self.player),
                                include_socks=bool(self.options.include_socks.value),
