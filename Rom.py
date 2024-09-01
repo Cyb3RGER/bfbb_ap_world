@@ -485,8 +485,8 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
     @classmethod
     def check_hash(cls):
         if not validate_hash():
-            Exception(f"Supplied Base Rom does not match known MD5 for BfBB (US). "
-                      "Get the correct game and version.")
+            raise Exception(f"Supplied Base Rom does not match known MD5 Hash for BfBB (US). "
+                            f"Get the correct game and version. The known MD5 Hash is \"{BFBB_HASH}\".")
 
     @classmethod
     def check_version(cls, opened_zipfile: zipfile.ZipFile) -> bool:
