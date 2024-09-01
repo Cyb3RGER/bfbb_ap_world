@@ -185,7 +185,7 @@ so_krabs_rules = [
     # locations
     {
         ItemNames.spat: {
-            LocationNames.spat_ks_01: lambda player: lambda state: state.has_so_amount(player, 30100 / 2),
+            LocationNames.spat_ks_01: lambda player: lambda state: state.has_so_amount(player, 3000 / 2),
             LocationNames.spat_ks_02: lambda player: lambda state: state.has_so_amount(player, 6500 / 2),
             LocationNames.spat_ks_03: lambda player: lambda state: state.has_so_amount(player, 10500 / 2),
             LocationNames.spat_ks_04: lambda player: lambda state: state.has_so_amount(player, 15000 / 2),
