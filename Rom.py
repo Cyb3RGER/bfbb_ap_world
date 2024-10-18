@@ -111,26 +111,27 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         include_level_items = BfBBDeltaPatch.get_bool(opened_zipfile, "include_level_items")
         if not include_skills and not include_level_items and randomize_gate_cost == 0:
             return
+        cls.logger.debug('--setting up--')
         # extract dependencies need to patch with IP
-        world_path = os.path.join(__file__[:__file__.find('worlds') + len('worlds')], 'bfbb.apworld')
-        is_ap_world = os.path.exists(world_path)
+        worlds_folder = 'custom_worlds' if 'custom_worlds' in __file__ else 'worlds'
+        world_path = os.path.join(__file__[:__file__.find(worlds_folder) + len(worlds_folder)], 'bfbb.apworld')
+        is_frozen_ap_world = os.path.exists(world_path)
+        cls.logger.debug(f'is_frozen_ap_world: {is_frozen_ap_world}')
         lib_path = os.path.abspath(os.path.dirname(__file__) + '/inc/')
-        if is_ap_world:
+        if is_frozen_ap_world:
             lib_path = os.path.expandvars('%APPDATA%/bfbb_ap/')
             with zipfile.ZipFile(world_path) as world_zip:
                 for file in world_zip.namelist():
-                    if file.startswith('bfbb/inc/packages') or file.startswith('bfbb/inc/IP'):
+                    if file.startswith('bfbb/inc/IP'):
                         try:
                             world_zip.extract(file, lib_path)
                         except:
                             cls.logger.warning(f"warning: couldn't overwrite dependency: {file}")
             lib_path = lib_path + 'bfbb/inc/'
-        if lib_path not in sys.path:
-            sys.path.append(lib_path)
         # print(sys.path)
         cls.logger.debug('--before pythonnet.load--')
         # setup pythonnet
-        from packages.pythonnet import load
+        from pythonnet import load
         load()
         import clr
         # extract ISO content
@@ -159,17 +160,19 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         if not os.path.exists(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-master/'):
             import requests
             import io
-            editor_files_url = "https://github.com/igorseabra4/IndustrialPark-EditorFiles/archive/master.zip"
+            editor_files_url = "https://github.com/igorseabra4/IndustrialPark-EditorFiles/archive/66a918fe76dbc7f7a39d39aa1f9991587d8f0bde.zip"
             response = requests.get(editor_files_url)
             # Check if the request was successful
             if response.status_code == 200:
                 # Read the content of the response
+                assert hashlib.sha256(response.content).hexdigest() == "3ac4f52d9361195482d361b53b3893eb7dd460198118d00a776a5af2130bbec0", "failed to download editor-files: doesn't match expected hash"
                 zip_content = io.BytesIO(response.content)
 
                 # Open the zip file
                 with zipfile.ZipFile(zip_content, 'r') as zip_ref:
                     # Extract all files to a directory (change the path accordingly)
                     zip_ref.extractall(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/')
+                os.rename(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-66a918fe76dbc7f7a39d39aa1f9991587d8f0bde',f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-master')
 
                 cls.logger.info("File successfully downloaded and extracted editor files.")
             else:

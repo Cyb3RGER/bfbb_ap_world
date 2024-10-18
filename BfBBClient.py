@@ -10,7 +10,7 @@ from enum import Flag
 from queue import SimpleQueue
 from typing import Callable, Optional, Any, Dict, Tuple
 
-from .inc.packages import dolphin_memory_engine
+import dolphin_memory_engine
 
 import Utils
 from CommonClient import CommonContext, server_loop, gui_enabled, ClientCommandProcessor, logger, \
