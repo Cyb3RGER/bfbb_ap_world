@@ -129,8 +129,8 @@ class BattleForBikiniBottom(World):
             if last_level is not None and last_level in [ConnectionNames.hub1_b1, ConnectionNames.hub2_b2]:
                 level_inc_max = 2 if self.options.include_skills else 1
             level_inc_min = min(level_inc_min, level_inc_max)
-            cost = min(self.random.randint(level_inc_min, level_inc_max) + last_cost,
-                       self.options.required_spatulas.value - 1)
+            cost = min(self.random.randint(level_inc_min, level_inc_max) + last_cost, self.options.required_spatulas.value - 1)
+            assert cost > 0, f"{v} gate cost too low"
             self.gate_costs[v] = cost
             last_level = v
             last_cost = cost
@@ -147,8 +147,7 @@ class BattleForBikiniBottom(World):
         # Generate item pool
         itempool = [ItemNames.spat] * self.options.available_spatulas.value
         if 100 - self.options.available_spatulas.value > 0:
-            itempool += self.random.choices(filler_items, weights=filler_weights,
-                                            k=100 - self.options.available_spatulas.value)
+            itempool += self.random.choices(filler_items, weights=filler_weights, k=100 - self.options.available_spatulas.value)
         if self.options.include_socks.value:
             itempool += [ItemNames.sock] * 80
         if self.options.include_skills.value:
@@ -216,8 +215,7 @@ class BattleForBikiniBottom(World):
                 classification = ItemClassification.progression_skip_balancing
         if name in [ItemNames.so_500, ItemNames.so_750, ItemNames.so_1000] and self.options.include_purple_so == 0:
             classification = ItemClassification.useful
-        item = BfBBItem(name, classification,
-                        item_data.id, self.player)
+        item = BfBBItem(name, classification, item_data.id, self.player)
 
         return item
 

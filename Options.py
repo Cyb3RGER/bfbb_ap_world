@@ -14,7 +14,7 @@ class AvailableSpatulas(Range):
 class RequiredSpatulas(Range):
     """Amount of golden spatulas required to enter the last boss fight"""
     display_name = "Required Spatulas"
-    range_start = 1
+    range_start = 20
     range_end = 99
     default = 75
 
