@@ -27,6 +27,7 @@ class CheckTypes(Flag):
     PURPLE_SO = 32
 
 
+CONNECTION_REFUSED_VANILLA_GAME_STATUS = "Vanilla game detected. Please load the patched game."
 CONNECTION_REFUSED_GAME_STATUS = "Dolphin Connection refused due to invalid Game. Please load the US Version of BfBB."
 CONNECTION_REFUSED_SAVE_STATUS = "Dolphin Connection refused due to invalid Save. " \
                                  "Please make sure you loaded a save file used on this slot and seed."
@@ -1215,8 +1216,8 @@ async def dolphin_sync_task(ctx: BfBBContext):
                             '\0')
                         if ctx.auth == '\x02\x00\x00\x00\x04\x00\x00\x00\x02\x00\x00\x00\x04\x00\x00\x00\x02\x00\x00' \
                                        '\x00\x02\x00\x00\x00\x04\x00\x00\x00\x04':
-                            logger.info("Vanilla game detected. Please load the patched game.")
-                            ctx.dolphin_status = CONNECTION_REFUSED_GAME_STATUS
+                            logger.info(CONNECTION_REFUSED_VANILLA_GAME_STATUS)
+                            ctx.dolphin_status = CONNECTION_REFUSED_VANILLA_GAME_STATUS
                             ctx.awaiting_rom = False
                             dolphin_memory_engine.un_hook()
                             await ctx.disconnect()
