@@ -2,9 +2,10 @@ $requirementsPath = "requirements.txt"
 $platform = "win_amd64"
 $libPath = "release\lib"
 $basePath = "."
+$tmpPath = "release\tmp"
 $apworldBuildPath = "release\tmp\bfbb"
 $apworldOutPath = "release\bfbb.apworld"
-$apworldOutZip = [System.IO.Path]::ChangeExtension($apworldOutPath, ".zip")
+$apworldOutZip = "release\tmp\bfbb.zip"
 
 Remove-Item -Recurse -Force -Path "release\lib"
 
@@ -36,14 +37,19 @@ Get-ChildItem -Path $libPath -Recurse -Directory -Filter "__pycache__" | ForEach
 # build apworld
 # copy base files needed
 robocopy $basePath $apworldBuildPath /MIR /XD IP_src IndustrialPark-EditorFiles __pycache__ release .git /XF .gitignore .gitmodules *.ps1 TODO.md
+# remove old apworld
+Remove-Item -Force -Path $apworldOutZip
 # zip it
-Compress-Archive -Path $apworldBuildPath -DestinationPath $apworldOutZip -Force
+#Compress-Archive -Path $apworldBuildPath -DestinationPath $apworldOutZip -Force
+Set-Location -Path "release\tmp\"
+7z a -tzip -y "bfbb.zip" "bfbb"
+Set-Location -Path "..\..\"
 # Check if the target file exists and remove it
 if (Test-Path $apworldOutPath) {
     Remove-Item $apworldOutPath -Force
 }
 # rename to apworld
-Rename-Item -Path $apworldOutZip -NewName ([System.IO.Path]::GetFileName($apworldOutPath))
+Move-Item -Path $apworldOutZip -Destination $apworldOutPath
 # clean up
 Remove-Item -Recurse -Force -Path $apworldBuildPath
 
