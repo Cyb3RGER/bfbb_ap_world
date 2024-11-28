@@ -2,7 +2,6 @@ import hashlib
 import json
 import logging
 import os
-import sys
 import tempfile
 import zipfile
 from enum import Enum
@@ -131,9 +130,20 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         # print(sys.path)
         cls.logger.debug('--before pythonnet.load--')
         # setup pythonnet
-        from pythonnet import load
+        from pythonnet import load, set_runtime, get_runtime_info
+        set_runtime('netfx')
+        cls.logger.debug(f"runtime info: {get_runtime_info()}")
         load()
         import clr
+        from System import Environment
+        from System.Runtime.InteropServices  import RuntimeInformation
+        from System.Reflection import Assembly
+
+        # some version logging
+        clr_version = Assembly.Load("System.Runtime").GetName().Version
+        cls.logger.debug(f"CLR Version: {clr_version}")
+        cls.logger.debug(f"Environment.Version: {Environment.Version}")
+        cls.logger.debug(f"RuntimeInformation.FrameworkDescription: {RuntimeInformation.FrameworkDescription}")
         # extract ISO content
         extraction_temp_dir = tempfile.TemporaryDirectory()
         extraction_path = extraction_temp_dir.name
