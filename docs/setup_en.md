@@ -73,3 +73,74 @@ The recommended way to host a game is to use the Archipelago hosting service. Th
 6. Note that a link to a MultiWorld Tracker is at the top of the room page. The tracker shows the progress of all
    players in the game. Any observers may also be given the link to this page.
 7. Once all players have joined, you may begin playing.
+
+## Troubleshooting
+
+The setup for this AP world is rather complex, so here are some common issues encountered during setup and how to fix
+them.
+
+### I don't see the BfBB Client in the Launcher.
+
+Make sure you have installed the AP world. It should be in the `custom_worlds` folder within your AP directory.
+
+### I see the BfBB Client, but it doesn't open.
+
+This is most likely due to `dolphin_memory_engine` not loading correctly.
+
+1. Ensure you have placed all files from the included `lib` folder into the `lib` folder in your AP directory.
+2. Verify that you are using the correct version for your AP installation, as described on the release page.
+
+If you are unsure which AP version you are using:
+
+- Run `ArchipelagoLauncherDebug.exe`.
+- In the console that opens, the first line will display the AP version and the Python version being used. It will look
+  something like this:
+
+    ```plaintext
+    Archipelago (0.5.1) logging initialized on [...] running Python 3.12.6 (frozen)
+    ```
+
+In this example, the Python version is 3.12. This should match the end of the file name of the downloaded release (e.g.,
+`bfbb_apworld-vX_X_X-win_amd64-py3_12.zip`).
+
+If the issue persists, try the following:
+
+- Delete your `lib` folder.
+- Reinstall AP.
+- Follow the setup instructions again.
+
+### The BfBB Client opens, but it's just a black window.
+
+This is normal. The client becomes unresponsive while patching, which can take a while, especially the first time.
+
+### I get an error during patching...
+
+#### Error: `Failed to resolve Python.Runtime.Loader.Initialize from [...]\lib\pythonnet\runtime\Python.Runtime.dll`
+
+Windows may block this DLL included in the download. To fix this:
+
+1. Navigate to `\lib\pythonnet\runtime\` in your AP directory.
+2. Right-click on `Python.Runtime.dll` and select **Properties**.
+3. Near the bottom of the Properties window, check for an option to **Unblock** the file and apply the change.
+
+#### Error: `Permission denied '[...].gcm'`
+
+This usually occurs when the patched file is already open in Dolphin or another program. Close all programs that might access the file and try again.
+
+#### Error: `No such file or directory: '[...]\Nickelodeon SpongeBob SquarePants - Battle for Bikini Bottom (USA).iso'`
+
+Ensure that you have placed the vanilla USA ISO in your root AP directory with the exact name:
+
+```plaintext
+Nickelodeon SpongeBob SquarePants - Battle for Bikini Bottom (USA).iso
+```
+
+If file name extensions are hidden in Windows Explorer:
+
+1. Enable them temporarily under View in the menu.
+2. Ensure the file does not have a double extension (e.g., ``.iso.iso``).
+
+#### Error: `Failed to create a default .NET runtime [...]`
+
+Ensure that you have Microsoft .NET Framework 4.8 or higher installed. If issues persist, you may need to uninstall
+older versions of .NET Framework.
