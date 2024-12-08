@@ -142,5 +142,13 @@ If file name extensions are hidden in Windows Explorer:
 
 #### Error: `Failed to create a default .NET runtime [...]`
 
-Ensure that you have Microsoft .NET Framework 4.8 or higher installed. If issues persist, you may need to uninstall
-older versions of .NET Framework.
+Ensure that Microsoft .NET Framework 4.8 or higher is installed.
+
+This error may also occur if the libraries were not installed correctly. To verify the installation, follow all the steps outlined [here](#i-see-the-bfbb-client-but-it-doesnt-open).
+
+Additionally, ensure that none of the dlls in ``lib\clr_loader\ffi\dlls`` are blocked:
+
+1. Right-click on the dll and select **Properties**.
+2. Near the bottom of the Properties window, check for an option to **Unblock** the file and apply the change.
+
+If the issue persists, consider uninstalling older versions of the .NET Framework. **NOTE**: Uninstalling older versions may prevent other programs that depend on them from working correctly.
