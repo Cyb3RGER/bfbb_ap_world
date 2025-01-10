@@ -627,7 +627,6 @@ class BfBBContext(CommonContext):
         if password_requested and not self.password:
             logger.info('Enter the password required to join this game:')
             self.password = await self.console_input()
-            return self.password
         if not self.auth:
             if self.awaiting_rom:
                 return

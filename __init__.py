@@ -34,7 +34,7 @@ components.append(Component("BfBB Client", func=run_client, component_type=Type.
 class BattleForBikiniBottomWeb(WebWorld):
     tutorials = [Tutorial(
         "Multiworld Setup Guide",
-        "A guide to setting up the The Binding Of Isaac Repentance integration for Archipelago multiworld games.",
+        "A guide to setting up the SpongeBob SquarePants: Battle for Bikini Bottom integration for Archipelago multiworld games.",
         "English",
         "setup_en.md",
         "setup/en",
