@@ -63,6 +63,10 @@ class RandomizeGateCost(Choice):
     option_high = 3
     default = 0
 
+class RingLink(Toggle):
+    """Enables Ring Link support for Shiny Objects"""
+    display_name = "Ring Link"
+    default = 0
 
 @dataclass
 class BfBBOptions(PerGameCommonOptions):
@@ -75,3 +79,4 @@ class BfBBOptions(PerGameCommonOptions):
     include_purple_so: IncludePurpleSO
     randomize_gate_cost: RandomizeGateCost
     death_link: DeathLink
+    ring_link: RingLink
