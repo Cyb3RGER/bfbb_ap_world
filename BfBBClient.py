@@ -582,6 +582,11 @@ class BfBBContext(CommonContext):
         self.has_send_death = False
         self.last_death_link_send = time.time()
         self.current_scene_key = None
+        self.ring_link = False
+        self.previous_rings = None
+        self.ring_link_rings = 0
+        self.game_tags = []
+        self.instance_id = time.time()
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
@@ -596,6 +601,8 @@ class BfBBContext(CommonContext):
             self.included_check_types = CheckTypes.SPAT
             if 'death_link' in args['slot_data']:
                 Utils.async_start(self.update_death_link(bool(args['slot_data']['death_link'])))
+            if 'ring_link' in args['slot_data']:
+                self.ring_link = args['slot_data']["ring_link"]
             if 'include_socks' in args['slot_data'] and args['slot_data']['include_socks']:
                 self.included_check_types |= CheckTypes.SOCK
             if 'include_skills' in args['slot_data'] and args['slot_data']['include_skills']:
@@ -614,6 +621,11 @@ class BfBBContext(CommonContext):
                     self.last_rev_index += 1
             self.items_received_2.sort(key=lambda v: v[1])
             self._update_item_counts(args)
+        elif cmd == "Bounced":
+            if "tags" in args:
+                related_tags = args["tags"]
+                if "RingLink" in related_tags:
+                    handle_received_rings(self, args["data"])
 
     def on_deathlink(self, data: Dict[str, Any]) -> None:
         super().on_deathlink(data)
@@ -733,7 +745,7 @@ def _give_level_pickup(ctx: BfBBContext, lvl_idx: int):
 
 def _give_shiny_objects(ctx: BfBBContext, amount: int) -> object:
     cur_count = dolphin_memory_engine.read_word(SHINY_COUNT_ADDR)
-    dolphin_memory_engine.write_word(SHINY_COUNT_ADDR, min(0x01869F, cur_count + amount))
+    dolphin_memory_engine.write_word(SHINY_COUNT_ADDR, min(0x01869F, max(cur_count + amount, 0)))
 
 
 def _inc_delayed_item_count(ctx: BfBBContext, addr: int, val: int = 1):
@@ -1193,7 +1205,7 @@ async def dolphin_sync_task(ctx: BfBBContext):
                                 dolphin_memory_engine.write_word(EXPECTED_INDEX_ADDR + i, 0)
                     await asyncio.sleep(.1)
                     continue
-                # _print_player_info(ctx)
+                _print_player_info(ctx)
                 if ctx.slot:
                     if not validate_save(ctx):
                         logger.info(CONNECTION_REFUSED_SAVE_STATUS)
@@ -1208,6 +1220,7 @@ async def dolphin_sync_task(ctx: BfBBContext):
                         await check_death(ctx)
                     await give_items(ctx)
                     await check_locations(ctx)
+                    await handle_ring_link(ctx)
                     # await set_locations(ctx)
                 else:
                     if not ctx.auth:
@@ -1328,6 +1341,57 @@ def main(connect=None, password=None, patch_file=None):
     asyncio.run(_main(connect, password, patch_file))
     colorama.deinit()
 
+async def handle_ring_link(ctx):
+    ring_link = False
+    old_tags = ctx.tags.copy()
+    if ctx.ring_link:
+        if "RingLink" not in ctx.tags:
+            ctx.tags.update(["RingLink"])
+        ring_link = True
+    else:
+        ctx.tags = []
+    if old_tags != ctx.tags and ctx.server and not ctx.server.socket.closed:
+        await ctx.send_msgs([{"cmd": "ConnectUpdate", "tags": ctx.tags}])
+
+    difference = 0
+    previous = ctx.previous_rings
+    current_rings = dolphin_memory_engine.read_word(SHINY_COUNT_ADDR)
+
+    if current_rings == 0 and ctx.previous_rings is not None and ctx.previous_rings > 20:
+        # count as death scenario rather
+        pass
+    elif ctx.previous_rings is None:
+        ctx.previous_rings = current_rings
+    else:
+        ctx.previous_rings = current_rings
+        difference = current_rings - previous
+        #if difference != 0:
+            #print("ring diff=", difference)
+
+    if difference != 0:
+        msg = {
+            "cmd": "Bounce",
+            "slots": [ctx.slot],
+            "data": {
+                "time":  time.time(),
+                "source": ctx.instance_id,
+                "amount": difference
+            },
+            "tags": {"RingLink"}
+        }
+        print(msg),
+        await ctx.send_msgs([msg])
+
+def handle_received_rings(ctx, data):
+    print(data)
+    amount = data["amount"]
+    source = data["source"]
+
+    if source == ctx.instance_id:
+        return
+
+    _give_shiny_objects(ctx, amount)
+    ctx.previous_rings = None
 
 if __name__ == '__main__':
     parser = get_base_parser()
