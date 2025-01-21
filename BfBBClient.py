@@ -976,7 +976,7 @@ async def give_items(ctx: BfBBContext):
 #         if not _is_ptr_valid(obj_ptr + 0x16C):
 #             return
 #         obj_state = dolphin_memory_engine.read_word(obj_ptr + 0x16C)
-#         print(obj_state)
+#         obj_state)
 #         if obj_state is not None and obj_state & 0x4 == 0:
 #             dolphin_memory_engine.write_word(obj_ptr + 0x16c, obj_state & ~0x3f | 0x4)
 
@@ -1055,7 +1055,7 @@ async def _check_objects_by_id(ctx: BfBBContext, locations_checked: set, id_tabl
             if check_cb(ctx, obj_ptr):
                 locations_checked.add(k)
                 if k == base_id + 83 and not ctx.finished_game:
-                    print("send done")
+                    "send done")
                     await ctx.send_msgs([
                         {"cmd": "StatusUpdate",
                          "status": 30}
@@ -1121,7 +1121,7 @@ async def check_locations(ctx: BfBBContext):
             {"cmd": "LocationChecks",
              "locations": locations_checked}
         ])
-        print([ctx.location_names[location] for location in locations_checked])
+        [ctx.location_names[location] for location in locations_checked])
 
 
 async def check_alive(ctx: BfBBContext):
@@ -1366,7 +1366,7 @@ async def handle_ring_link(ctx):
         ctx.previous_rings = current_rings
         difference = current_rings - previous
         #if difference != 0:
-            #print("ring diff=", difference)
+            #"ring diff=", difference)
 
     if difference != 0:
         msg = {
@@ -1379,11 +1379,10 @@ async def handle_ring_link(ctx):
             },
             "tags": {"RingLink"}
         }
-        print(msg),
+
         await ctx.send_msgs([msg])
 
 def handle_received_rings(ctx, data):
-    print(data)
     amount = data["amount"]
     source = data["source"]
 
