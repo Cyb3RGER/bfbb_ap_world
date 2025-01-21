@@ -1,4 +1,4 @@
-# BfBB AP world ring link 
+# BfBB AP world
 
 Battle for Bikini Bottom [Archipelago](https://archipelago.gg/) world.
 More info [here](https://github.com/Cyb3RGER/bfbb_ap_world/blob/main/docs/en_bfbb.md).
@@ -9,7 +9,10 @@ See the [setup guide](https://github.com/Cyb3RGER/bfbb_ap_world/blob/main/docs/s
 
 ## Running from source
 
-- go to the main page for this.
+- Clone this repo with submodules into the worlds folder for your AP source.
+- Install py_dolphin_memory_engine and pythonnet via pip:
+    - ``pip install dolphin-memory-engine``
+    - ``pip install pythonnet``
 
 ## Known Issues
 
