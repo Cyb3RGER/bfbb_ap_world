@@ -1,4 +1,4 @@
-# BfBB AP world ring link port
+# BfBB AP world ring link 
 
 Battle for Bikini Bottom [Archipelago](https://archipelago.gg/) world.
 More info [here](https://github.com/Cyb3RGER/bfbb_ap_world/blob/main/docs/en_bfbb.md).
