@@ -584,8 +584,6 @@ class BfBBContext(CommonContext):
         self.current_scene_key = None
         self.ring_link = False
         self.previous_rings = None
-        self.ring_link_rings = 0
-        self.game_tags = []
         self.instance_id = time.time()
 
     async def disconnect(self, allow_autoreconnect: bool = False):
@@ -625,7 +623,7 @@ class BfBBContext(CommonContext):
             if "tags" in args:
                 related_tags = args["tags"]
                 if "RingLink" in related_tags:
-                    handle_received_rings(self, args["data"])
+                    on_ringlink(self, args["data"])
 
     def on_deathlink(self, data: Dict[str, Any]) -> None:
         super().on_deathlink(data)
@@ -1205,7 +1203,7 @@ async def dolphin_sync_task(ctx: BfBBContext):
                                 dolphin_memory_engine.write_word(EXPECTED_INDEX_ADDR + i, 0)
                     await asyncio.sleep(.1)
                     continue
-                #_print_player_info(ctx)
+                _print_player_info(ctx)
                 if ctx.slot:
                     if not validate_save(ctx):
                         logger.info(CONNECTION_REFUSED_SAVE_STATUS)
@@ -1358,7 +1356,6 @@ async def handle_ring_link(ctx):
     current_rings = dolphin_memory_engine.read_word(SHINY_COUNT_ADDR)
 
     if current_rings == 0 and ctx.previous_rings is not None and ctx.previous_rings > 20:
-        # count as death scenario rather
         pass
     elif ctx.previous_rings is None:
         ctx.previous_rings = current_rings
@@ -1381,7 +1378,7 @@ async def handle_ring_link(ctx):
         }
         await ctx.send_msgs([msg])
 
-def handle_received_rings(ctx, data):
+def on_ringlink(ctx, data):
     amount = data["amount"]
     source = data["source"]
 
