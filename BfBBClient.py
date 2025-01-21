@@ -1205,7 +1205,7 @@ async def dolphin_sync_task(ctx: BfBBContext):
                                 dolphin_memory_engine.write_word(EXPECTED_INDEX_ADDR + i, 0)
                     await asyncio.sleep(.1)
                     continue
-                _print_player_info(ctx)
+                #_print_player_info(ctx)
                 if ctx.slot:
                     if not validate_save(ctx):
                         logger.info(CONNECTION_REFUSED_SAVE_STATUS)
