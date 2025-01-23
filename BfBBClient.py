@@ -609,6 +609,8 @@ class BfBBContext(CommonContext):
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
+        self.password = None
+        self.tags = {'AP'}
         await super().disconnect(allow_autoreconnect)
 
     def on_package(self, cmd: str, args: dict):
@@ -621,9 +623,9 @@ class BfBBContext(CommonContext):
             self.last_rev_index = -1
             self.items_received_2 = []
             self.included_check_types = CheckTypes.SPAT
-            if 'death_link' in args['slot_data'] or 'ring_link' in args['slot_data']:
-                self.death_link = bool(args['slot_data'].get('death_link', 0))
-                self.ring_link = bool(args['slot_data'].get('ring_link', 0))
+            self.death_link = bool(args['slot_data'].get('death_link', 0))
+            self.ring_link = bool(args['slot_data'].get('ring_link', 0))
+            if self.death_link or self.ring_link:
                 Utils.async_start(self.update_tags())
             if 'include_socks' in args['slot_data'] and args['slot_data']['include_socks']:
                 self.included_check_types |= CheckTypes.SOCK
