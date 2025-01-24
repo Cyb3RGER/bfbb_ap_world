@@ -54,6 +54,7 @@ SOCK_COUNT_ADDR = GLOBALS_ADDR + 0x1BC4
 POWERUPS_ADDR = 0x803c0f15
 PLAYER_ADDR = 0x803C0C38
 PLAYER_CONTROL_OWNER = 0x803c1ce0
+PLAYER_SETTINGS_PRT_ADDR = 0x803c0f1c
 
 # AP free space usage
 # notes on free space
@@ -1065,6 +1066,24 @@ def format_to_bitmask(val: bytes) -> str:
     return result
 
 
+def get_player_type(ctx: BfBBContext):
+    player_settings_ptr = dolphin_memory_engine.read_word(PLAYER_SETTINGS_PRT_ADDR)
+    if not _is_ptr_valid(player_settings_ptr):
+        return None
+    player_type = dolphin_memory_engine.read_word(player_settings_ptr)
+    return player_type
+
+def get_character_name(ctx: BfBBContext):
+    player_type = get_player_type(ctx)
+    if player_type == 0:
+        return "Spongebob"
+    elif player_type == 1:
+        return "Patrick"
+    elif player_type == 2:
+        return "Sandy"
+    else:
+        return None
+
 def _check_platform_state(ctx: BfBBContext, obj_ptr: int):
     if not _is_ptr_valid(obj_ptr + 0x18):
         return False
@@ -1186,10 +1205,18 @@ async def check_alive(ctx: BfBBContext):
 
 async def check_death(ctx: BfBBContext):
     cur_health = dolphin_memory_engine.read_word(HEALTH_ADDR)
-    if cur_health <= 0 or check_control_owner(ctx, lambda owner: owner & 0x4):
+    grabbed_by_hans = check_control_owner(ctx, lambda owner: owner & 0x4)
+    if cur_health <= 0 or grabbed_by_hans:
         if not ctx.has_send_death and time.time() >= ctx.last_death_link + 3:
             ctx.has_send_death = True
-            await ctx.send_death(ctx.player_names[ctx.slot] + " was saved by Hans")
+            if grabbed_by_hans:
+                death_text = f"{ctx.player_names[ctx.slot]} was saved by Hans"
+            else:
+                death_text = f"{ctx.player_names[ctx.slot]} has died"
+                character_name = get_character_name(ctx)
+                if character_name:
+                    death_text = f"{death_text} as {character_name}"
+            await ctx.send_death(death_text)
     else:
         ctx.has_send_death = False
 
