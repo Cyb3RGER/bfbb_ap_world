@@ -1184,13 +1184,12 @@ async def check_alive(ctx: BfBBContext):
     cur_health = dolphin_memory_engine.read_word(HEALTH_ADDR)
     return not (cur_health <= 0 or check_control_owner(ctx, lambda owner: owner & 0x4))
 
-
 async def check_death(ctx: BfBBContext):
     cur_health = dolphin_memory_engine.read_word(HEALTH_ADDR)
     if cur_health <= 0 or check_control_owner(ctx, lambda owner: owner & 0x4):
         if not ctx.has_send_death and time.time() >= ctx.last_death_link + 3:
             ctx.has_send_death = True
-            await ctx.send_death("BfBB")
+            await ctx.send_death(ctx.player_names[ctx.slot] + " was saved by Hans")
     else:
         ctx.has_send_death = False
 
