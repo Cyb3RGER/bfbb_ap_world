@@ -195,6 +195,7 @@ class BattleForBikiniBottom(World):
         return {
             "death_link": self.options.death_link.value,
             "ring_link": self.options.ring_link.value,
+            "shiny_object_to_ring_ratio": self.options.shiny_object_to_ring_ratio.value,
             "include_socks": self.options.include_socks.value,
             "include_skills": self.options.include_skills.value,
             "include_golden_underwear": self.options.include_golden_underwear.value,

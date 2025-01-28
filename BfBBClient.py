@@ -560,24 +560,61 @@ class BfBBCommandProcessor(ClientCommandProcessor):
             logger.info(f"Dolphin Status: {self.ctx.dolphin_status}")
 
     def _cmd_deathlink(self):
-        """Toggle deathlink override"""
+        """Toggle Death Link override."""
+        if self.ctx.server is None or self.ctx.server.socket.closed or self.ctx.auth is None:
+            logger.info("Not connected")
+            return
+
         if isinstance(self.ctx, BfBBContext):
             if not self.ctx.death_link:
                 logger.info(f"Death Link is not enabled for this Slot")
                 return
+
             self.ctx.disable_death_link = not self.ctx.disable_death_link
             Utils.async_start(self.ctx.update_tags())
             logger.info(f"Toggled Death Link {"off" if self.ctx.disable_death_link else "on"}")
 
     def _cmd_ringlink(self):
-        """Toggle ringlink override"""
+        """Toggle Ring Link override."""
+        if self.ctx.server is None or self.ctx.server.socket.closed or self.ctx.auth is None:
+            logger.info("Not connected")
+            return
+
         if isinstance(self.ctx, BfBBContext):
             if not self.ctx.ring_link:
                 logger.info(f"Ring Link is not enabled for this Slot")
                 return
+
             self.ctx.disable_ring_link = not self.ctx.disable_ring_link
             Utils.async_start(self.ctx.update_tags())
             logger.info(f"Toggled Ring Link {"off" if self.ctx.disable_ring_link else "on"}")
+
+    def _cmd_ringlink_ratio(self, ratio: str = ""):
+        """Overwrite or check the Shiny Object to Ring ratio (1-100). Resets after reconnect."""
+        if self.ctx.server is None or self.ctx.server.socket.closed or self.ctx.auth is None:
+            logger.info("Not connected")
+            return
+        if isinstance(self.ctx, BfBBContext):
+            if not ratio:
+                logger.info(f"Current Shiny Object to Ring ratio: {self.ctx.so_to_ring_ratio}")
+                return
+
+            try:
+                new_ratio = int(ratio)
+            except ValueError:
+                logger.info("The ratio has to be an integer.")
+                return
+
+            if 100 < new_ratio or new_ratio < 1:
+                logger.info("The ratio has to be between 1 and 100")
+                return
+
+            if not self.ctx.ring_link:
+                logger.info(f"Ring Link is not enabled for this Slot")
+                return
+
+            self.ctx.so_to_ring_ratio = new_ratio
+            logger.info(f"Set Shiny Object to Ring ratio to: {self.ctx.so_to_ring_ratio}")
 
 
 class BfBBContext(CommonContext):
@@ -618,7 +655,6 @@ class BfBBContext(CommonContext):
         if cmd == 'Connected':
             self.disable_death_link = False
             self.disable_ring_link = False
-            self.so_to_ring_ratio = 10
             self.current_scene_key = f"bfbb_current_scene_T{self.team}_P{self.slot}"
             self.set_notify(self.current_scene_key)
             self.last_rev_index = -1
@@ -626,6 +662,7 @@ class BfBBContext(CommonContext):
             self.included_check_types = CheckTypes.SPAT
             self.death_link = bool(args['slot_data'].get('death_link', 0))
             self.ring_link = bool(args['slot_data'].get('ring_link', 0))
+            self.so_to_ring_ratio = args['slot_data'].get('shiny_object_to_ring_ratio', 10)
             if self.death_link or self.ring_link:
                 Utils.async_start(self.update_tags())
             if 'include_socks' in args['slot_data'] and args['slot_data']['include_socks']:
