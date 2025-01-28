@@ -15,35 +15,30 @@ from .names import ConnectionNames
 
 BFBB_HASH = "9e18f9a0032c4f3092945dc38a6517d3"
 
-class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
-    hash = BFBB_HASH
-    game = "Battle for Bikini Bottom"
+class BfBBContainer(APContainer, metaclass=AutoPatchRegister):
+    hash: str = BFBB_HASH
+    game: str = "Battle for Bikini Bottom"
     patch_file_ending: str = ".apbfbb"
     result_file_ending: str = ".gcm"
     zip_version: int = 1
     logger = logging.getLogger("BfBBPatch")
 
     def __init__(self, *args: Any, **kwargs: Any):
-        self.include_socks: int = kwargs['include_socks']
-        self.include_skills: int = kwargs['include_skills']
-        self.include_golden_underwear: int = kwargs['include_golden_underwear']
-        self.include_level_items: int = kwargs['include_level_items']
-        self.include_purple_so: int = kwargs['include_purple_so']
-        self.seed: bytes = kwargs['seed']
-        self.randomize_gate_cost: int = kwargs['randomize_gate_cost']
-        self.gate_costs: dict[str, int] = kwargs['gate_costs']
-        del kwargs['include_socks']
-        del kwargs['include_skills']
-        del kwargs['include_golden_underwear']
-        del kwargs['include_level_items']
-        del kwargs['include_purple_so']
-        del kwargs['seed']
-        del kwargs['randomize_gate_cost']
-        del kwargs['gate_costs']
-        super(BfBBDeltaPatch, self).__init__(*args, **kwargs)
+        if "data" in kwargs:
+            data = kwargs['data']
+            self.include_socks: int = data['include_socks']
+            self.include_skills: int = data['include_skills']
+            self.include_golden_underwear: int = data['include_golden_underwear']
+            self.include_level_items: int = data['include_level_items']
+            self.include_purple_so: int = data['include_purple_so']
+            self.seed: bytes = data['seed']
+            self.randomize_gate_cost: int = data['randomize_gate_cost']
+            self.gate_costs: dict[str, int] = data['gate_costs']
+            del kwargs['data']
+        super(BfBBContainer, self).__init__(*args, **kwargs)
 
     def write_contents(self, opened_zipfile: zipfile.ZipFile):
-        super(BfBBDeltaPatch, self).write_contents(opened_zipfile)
+        super(BfBBContainer, self).write_contents(opened_zipfile)
         opened_zipfile.writestr("zip_version",
                                 self.zip_version.to_bytes(1, "little"),
                                 compress_type=zipfile.ZIP_STORED)
@@ -73,7 +68,7 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
         opened_zipfile.writestr(f"gate_costs.json", json.dumps(self.gate_costs))
 
     def read_contents(self, opened_zipfile: zipfile.ZipFile) -> None:
-        super(BfBBDeltaPatch, self).read_contents(opened_zipfile)
+        super(BfBBContainer, self).read_contents(opened_zipfile)
 
     @classmethod
     def get_int(cls, opened_zipfile: zipfile.ZipFile, name: str):
@@ -104,10 +99,10 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
 
     @classmethod
     async def apply_hiphop_changes(cls, opened_zipfile: zipfile.ZipFile, source_iso, dest_iso):
-        randomize_gate_cost = BfBBDeltaPatch.get_int(opened_zipfile, "randomize_gate_cost")
-        gate_costs = BfBBDeltaPatch.get_json_obj(opened_zipfile, "gate_costs.json")
-        include_skills = BfBBDeltaPatch.get_bool(opened_zipfile, "include_skills")
-        include_level_items = BfBBDeltaPatch.get_bool(opened_zipfile, "include_level_items")
+        randomize_gate_cost = BfBBContainer.get_int(opened_zipfile, "randomize_gate_cost")
+        gate_costs = BfBBContainer.get_json_obj(opened_zipfile, "gate_costs.json")
+        include_skills = BfBBContainer.get_bool(opened_zipfile, "include_skills")
+        include_level_items = BfBBContainer.get_bool(opened_zipfile, "include_level_items")
         if not include_skills and not include_level_items and randomize_gate_cost == 0:
             return
         cls.logger.debug('--setting up--')
@@ -454,18 +449,18 @@ class BfBBDeltaPatch(APContainer, metaclass=AutoPatchRegister):
     async def apply_binary_changes(cls, opened_zipfile: zipfile.ZipFile, iso):
         cls.logger.info('--binary patching--')
         # get slot name and seed hash
-        manifest = BfBBDeltaPatch.get_json_obj(opened_zipfile, "archipelago.json")
+        manifest = BfBBContainer.get_json_obj(opened_zipfile, "archipelago.json")
         slot_name = manifest["player_name"]
         slot_name_bytes = slot_name.encode('utf-8')
         slot_name_offset = 0x2AB980
-        seed_hash = BfBBDeltaPatch.get_seed_hash(opened_zipfile)
+        seed_hash = BfBBContainer.get_seed_hash(opened_zipfile)
         seed_hash_offset = slot_name_offset + 0x40
         # always apply these patches
         patches = [Patches.AP_SAVE_LOAD, Patches.SPATS_REWARD_FIX]
         # conditional patches
-        include_socks = BfBBDeltaPatch.get_bool(opened_zipfile, "include_socks")
-        include_golden_underwear = BfBBDeltaPatch.get_bool(opened_zipfile, "include_golden_underwear")
-        include_level_items = BfBBDeltaPatch.get_bool(opened_zipfile, "include_level_items")
+        include_socks = BfBBContainer.get_bool(opened_zipfile, "include_socks")
+        include_golden_underwear = BfBBContainer.get_bool(opened_zipfile, "include_golden_underwear")
+        include_level_items = BfBBContainer.get_bool(opened_zipfile, "include_level_items")
         if include_socks:
             patches += [Patches.SOCKS_REWARD_FIX]
         if include_golden_underwear:

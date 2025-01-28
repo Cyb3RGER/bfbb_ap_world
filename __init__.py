@@ -13,7 +13,7 @@ from .Items import item_table, BfBBItem
 from .Locations import location_table, BfBBLocation
 from .Options import BfBBOptions, RandomizeGateCost
 from .Regions import create_regions
-from .Rom import BfBBDeltaPatch
+from .Rom import BfBBContainer
 from .Rules import set_rules
 from .names import ItemNames, ConnectionNames
 
@@ -204,7 +204,7 @@ class BattleForBikiniBottom(World):
             "gate_costs": self.gate_costs
         }
 
-    def create_item(self, name: str,) -> Item:
+    def create_item(self, name: str, ) -> Item:
         item_data = item_table[name]
         classification = item_data.classification
         if name == ItemNames.spat:
@@ -228,17 +228,19 @@ class BattleForBikiniBottom(World):
                 spoiler_handle.write(f"{k}: {v}\n")
 
     def generate_output(self, output_directory: str) -> None:
-        patch = BfBBDeltaPatch(path=os.path.join(output_directory, f"{self.multiworld.get_out_file_name_base(self.player)}{BfBBDeltaPatch.patch_file_ending}"),
-                               player=self.player,
-                               player_name=self.multiworld.get_player_name(self.player),
-                               include_socks=bool(self.options.include_socks.value),
-                               include_skills=bool(self.options.include_skills.value),
-                               include_golden_underwear=bool(
-                                   self.options.include_golden_underwear.value),
-                               include_level_items=bool(self.options.include_level_items.value),
-                               include_purple_so=bool(self.options.include_purple_so.value),
-                               seed=self.multiworld.seed_name.encode('utf-8'),
-                               randomize_gate_cost=self.options.randomize_gate_cost.value,
-                               gate_costs=self.gate_costs,
-                               )
-        patch.write()
+        apbfbb = BfBBContainer(
+            path=os.path.join(output_directory, f"{self.multiworld.get_out_file_name_base(self.player)}{BfBBContainer.patch_file_ending}"),
+            player=self.player,
+            player_name=self.multiworld.get_player_name(self.player),
+            data={
+                "include_socks": bool(self.options.include_socks.value),
+                "include_skills": bool(self.options.include_skills.value),
+                "include_golden_underwear": bool(self.options.include_golden_underwear.value),
+                "include_level_items": bool(self.options.include_level_items.value),
+                "include_purple_so": bool(self.options.include_purple_so.value),
+                "seed": self.multiworld.seed_name.encode('utf-8'),
+                "randomize_gate_cost": self.options.randomize_gate_cost.value,
+                "gate_costs": self.gate_costs,
+            }
+        )
+        apbfbb.write()

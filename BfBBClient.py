@@ -12,7 +12,7 @@ import dolphin_memory_engine
 import Utils
 from CommonClient import CommonContext, server_loop, gui_enabled, ClientCommandProcessor, logger, \
     get_base_parser
-from .Rom import BfBBDeltaPatch
+from .Rom import BfBBContainer
 
 
 class CheckTypes(Flag):
@@ -1425,20 +1425,20 @@ async def dolphin_sync_task(ctx: BfBBContext):
 
 async def patch_and_run_game(ctx: BfBBContext, patch_file):
     try:
-        result_path = os.path.splitext(patch_file)[0] + BfBBDeltaPatch.result_file_ending
+        result_path = os.path.splitext(patch_file)[0] + BfBBContainer.result_file_ending
         with zipfile.ZipFile(patch_file, 'r') as patch_archive:
-            if not BfBBDeltaPatch.check_version(patch_archive):
+            if not BfBBContainer.check_version(patch_archive):
                 logger.error(
                     "apbfbb version doesn't match this client.  Make sure your generator and client are the same")
                 raise Exception("apbfbb version doesn't match this client.")
 
         # check hash
-        BfBBDeltaPatch.check_hash()
+        BfBBContainer.check_hash()
 
-        shutil.copy(BfBBDeltaPatch.get_rom_path(), result_path)
-        await BfBBDeltaPatch.apply_hiphop_changes(zipfile.ZipFile(patch_file, 'r'), BfBBDeltaPatch.get_rom_path(),
-                                                  result_path)
-        await BfBBDeltaPatch.apply_binary_changes(zipfile.ZipFile(patch_file, 'r'), result_path)
+        shutil.copy(BfBBContainer.get_rom_path(), result_path)
+        await BfBBContainer.apply_hiphop_changes(zipfile.ZipFile(patch_file, 'r'), BfBBContainer.get_rom_path(),
+                                                 result_path)
+        await BfBBContainer.apply_binary_changes(zipfile.ZipFile(patch_file, 'r'), result_path)
 
         logger.info('--patching success--')
         os.startfile(result_path)
@@ -1465,10 +1465,10 @@ def main(connect=None, password=None, patch_file=None):
         ctx.patch_task = None
         if patch_file:
             ext = os.path.splitext(patch_file)[1]
-            if ext == BfBBDeltaPatch.patch_file_ending:
+            if ext == BfBBContainer.patch_file_ending:
                 logger.info("apbfbb file supplied, beginning patching process...")
                 ctx.patch_task = asyncio.create_task(patch_and_run_game(ctx, patch_file), name="PatchGame")
-            elif ext == BfBBDeltaPatch.result_file_ending:
+            elif ext == BfBBContainer.result_file_ending:
                 os.startfile(patch_file)
             else:
                 logger.warning(f"Unknown patch file extension {ext}")
