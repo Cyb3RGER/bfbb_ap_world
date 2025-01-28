@@ -1,13 +1,10 @@
 import asyncio
-import collections
 import os.path
 import shutil
-import subprocess
 import time
 import traceback
 import zipfile
 from enum import Flag
-from queue import SimpleQueue
 from typing import Callable, Optional, Any, Dict, Tuple
 
 import dolphin_memory_engine
@@ -57,6 +54,7 @@ SOCK_COUNT_ADDR = GLOBALS_ADDR + 0x1BC4
 POWERUPS_ADDR = 0x803c0f15
 PLAYER_ADDR = 0x803C0C38
 PLAYER_CONTROL_OWNER = 0x803c1ce0
+PLAYER_SETTINGS_PRT_ADDR = 0x803c0f1c
 
 # AP free space usage
 # notes on free space
@@ -561,6 +559,63 @@ class BfBBCommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, BfBBContext):
             logger.info(f"Dolphin Status: {self.ctx.dolphin_status}")
 
+    def _cmd_deathlink(self):
+        """Toggle Death Link override."""
+        if self.ctx.server is None or self.ctx.server.socket.closed or self.ctx.auth is None:
+            logger.info("Not connected")
+            return
+
+        if isinstance(self.ctx, BfBBContext):
+            if not self.ctx.death_link:
+                logger.info(f"Death Link is not enabled for this Slot")
+                return
+
+            self.ctx.disable_death_link = not self.ctx.disable_death_link
+            Utils.async_start(self.ctx.update_tags())
+            logger.info(f"Toggled Death Link {"off" if self.ctx.disable_death_link else "on"}")
+
+    def _cmd_ringlink(self):
+        """Toggle Ring Link override."""
+        if self.ctx.server is None or self.ctx.server.socket.closed or self.ctx.auth is None:
+            logger.info("Not connected")
+            return
+
+        if isinstance(self.ctx, BfBBContext):
+            if not self.ctx.ring_link:
+                logger.info(f"Ring Link is not enabled for this Slot")
+                return
+
+            self.ctx.disable_ring_link = not self.ctx.disable_ring_link
+            Utils.async_start(self.ctx.update_tags())
+            logger.info(f"Toggled Ring Link {"off" if self.ctx.disable_ring_link else "on"}")
+
+    def _cmd_ringlink_ratio(self, ratio: str = ""):
+        """Overwrite or check the Shiny Object to Ring ratio (1-100). Resets after reconnect."""
+        if self.ctx.server is None or self.ctx.server.socket.closed or self.ctx.auth is None:
+            logger.info("Not connected")
+            return
+        if isinstance(self.ctx, BfBBContext):
+            if not ratio:
+                logger.info(f"Current Shiny Object to Ring ratio: {self.ctx.so_to_ring_ratio}")
+                return
+
+            try:
+                new_ratio = int(ratio)
+            except ValueError:
+                logger.info("The ratio has to be an integer.")
+                return
+
+            if 100 < new_ratio or new_ratio < 1:
+                logger.info("The ratio has to be between 1 and 100")
+                return
+
+            if not self.ctx.ring_link:
+                logger.info(f"Ring Link is not enabled for this Slot")
+                return
+
+            self.ctx.so_to_ring_ratio = new_ratio
+            logger.info(f"Set Shiny Object to Ring ratio to: {self.ctx.so_to_ring_ratio}")
+
 
 class BfBBContext(CommonContext):
     command_processor = BfBBCommandProcessor
@@ -582,20 +637,34 @@ class BfBBContext(CommonContext):
         self.has_send_death = False
         self.last_death_link_send = time.time()
         self.current_scene_key = None
+        self.death_link = False
+        self.disable_death_link = False
+        self.ring_link = False
+        self.disable_ring_link = False
+        self.previous_shiny_objects = None
+        self.instance_id = time.time()
+        self.so_to_ring_ratio = 10
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
+        self.password = None
+        self.tags = {'AP'}
         await super().disconnect(allow_autoreconnect)
 
     def on_package(self, cmd: str, args: dict):
         if cmd == 'Connected':
+            self.disable_death_link = False
+            self.disable_ring_link = False
             self.current_scene_key = f"bfbb_current_scene_T{self.team}_P{self.slot}"
             self.set_notify(self.current_scene_key)
             self.last_rev_index = -1
             self.items_received_2 = []
             self.included_check_types = CheckTypes.SPAT
-            if 'death_link' in args['slot_data']:
-                Utils.async_start(self.update_death_link(bool(args['slot_data']['death_link'])))
+            self.death_link = bool(args['slot_data'].get('death_link', 0))
+            self.ring_link = bool(args['slot_data'].get('ring_link', 0))
+            self.so_to_ring_ratio = args['slot_data'].get('shiny_object_to_ring_ratio', 10)
+            if self.death_link or self.ring_link:
+                Utils.async_start(self.update_tags())
             if 'include_socks' in args['slot_data'] and args['slot_data']['include_socks']:
                 self.included_check_types |= CheckTypes.SOCK
             if 'include_skills' in args['slot_data'] and args['slot_data']['include_skills']:
@@ -614,8 +683,45 @@ class BfBBContext(CommonContext):
                     self.last_rev_index += 1
             self.items_received_2.sort(key=lambda v: v[1])
             self._update_item_counts(args)
+        elif cmd == "Bounced":
+            if "tags" in args:
+                related_tags = args["tags"]
+                if "RingLink" in related_tags:
+                    self.on_ringlink(args["data"])
+
+    async def update_tags(self):
+        old_tags = self.tags.copy()
+        if self.death_link and not self.disable_death_link:
+            self.tags.add("DeathLink")
+        else:
+            self.tags -= {"DeathLink"}
+        if self.ring_link and not self.disable_ring_link:
+            self.tags.add("RingLink")
+        else:
+            self.tags -= {"RingLink"}
+        if old_tags != self.tags and self.server and not self.server.socket.closed:
+            await self.send_msgs([{"cmd": "ConnectUpdate", "tags": self.tags}])
+
+    def on_ringlink(self, data):
+        if not self.ring_link or self.disable_ring_link:
+            return
+        if not "amount" in data:
+            return
+
+        amount = data["amount"] * self.so_to_ring_ratio
+        # we can safely handle packets with no source because we know it's not us,
+        # and we only use source to skip our own packets
+        source = data.get("source", None)
+
+        if source == self.instance_id:
+            return
+
+        _give_shiny_objects(self, amount)
+        self.previous_shiny_objects = None
 
     def on_deathlink(self, data: Dict[str, Any]) -> None:
+        if not self.death_link or self.disable_death_link:
+            return
         super().on_deathlink(data)
         _give_death(self)
 
@@ -733,7 +839,7 @@ def _give_level_pickup(ctx: BfBBContext, lvl_idx: int):
 
 def _give_shiny_objects(ctx: BfBBContext, amount: int) -> object:
     cur_count = dolphin_memory_engine.read_word(SHINY_COUNT_ADDR)
-    dolphin_memory_engine.write_word(SHINY_COUNT_ADDR, min(0x01869F, cur_count + amount))
+    dolphin_memory_engine.write_word(SHINY_COUNT_ADDR, min(0x01869F, max(cur_count + amount, 0)))
 
 
 def _inc_delayed_item_count(ctx: BfBBContext, addr: int, val: int = 1):
@@ -997,6 +1103,24 @@ def format_to_bitmask(val: bytes) -> str:
     return result
 
 
+def get_player_type(ctx: BfBBContext):
+    player_settings_ptr = dolphin_memory_engine.read_word(PLAYER_SETTINGS_PRT_ADDR)
+    if not _is_ptr_valid(player_settings_ptr):
+        return None
+    player_type = dolphin_memory_engine.read_word(player_settings_ptr)
+    return player_type
+
+def get_character_name(ctx: BfBBContext):
+    player_type = get_player_type(ctx)
+    if player_type == 0:
+        return "Spongebob"
+    elif player_type == 1:
+        return "Patrick"
+    elif player_type == 2:
+        return "Sandy"
+    else:
+        return None
+
 def _check_platform_state(ctx: BfBBContext, obj_ptr: int):
     if not _is_ptr_valid(obj_ptr + 0x18):
         return False
@@ -1116,13 +1240,20 @@ async def check_alive(ctx: BfBBContext):
     cur_health = dolphin_memory_engine.read_word(HEALTH_ADDR)
     return not (cur_health <= 0 or check_control_owner(ctx, lambda owner: owner & 0x4))
 
-
 async def check_death(ctx: BfBBContext):
     cur_health = dolphin_memory_engine.read_word(HEALTH_ADDR)
-    if cur_health <= 0 or check_control_owner(ctx, lambda owner: owner & 0x4):
+    grabbed_by_hans = check_control_owner(ctx, lambda owner: owner & 0x4)
+    if cur_health <= 0 or grabbed_by_hans:
         if not ctx.has_send_death and time.time() >= ctx.last_death_link + 3:
             ctx.has_send_death = True
-            await ctx.send_death("BfBB")
+            if grabbed_by_hans:
+                death_text = f"{ctx.player_names[ctx.slot]} was saved by Hans"
+            else:
+                death_text = f"{ctx.player_names[ctx.slot]} has died"
+                character_name = get_character_name(ctx)
+                if character_name:
+                    death_text = f"{death_text} as {character_name}"
+            await ctx.send_death(death_text)
     else:
         ctx.has_send_death = False
 
@@ -1178,6 +1309,40 @@ def validate_save(ctx: BfBBContext) -> bool:
     return False
 
 
+async def handle_ring_link(ctx: BfBBContext):
+    if (not check_ingame(ctx) or
+        not check_control_owner(ctx, lambda owner: owner == 0) or
+        not await check_alive(ctx)):
+        # we are not in a state where we can check SO count and get a reasonable value
+        return
+
+
+    current_shiny_objects = dolphin_memory_engine.read_word(SHINY_COUNT_ADDR)
+    previous = ctx.previous_shiny_objects
+
+    if ctx.previous_shiny_objects is None:
+        # no previous value, so we can set it to current and get out since the difference will be 0
+        ctx.previous_shiny_objects = current_shiny_objects
+        return
+
+    # using int cast to always round towards 0
+    difference = int((current_shiny_objects - previous)/ctx.so_to_ring_ratio)
+
+    if difference != 0:
+        ctx.previous_shiny_objects = current_shiny_objects
+        msg = {
+            "cmd": "Bounce",
+            "slots": [ctx.slot],
+            "data": {
+                "time": time.time(),
+                "source": ctx.instance_id,
+                "amount": difference
+            },
+            "tags": {"RingLink"}
+        }
+        await ctx.send_msgs([msg])
+
+
 async def dolphin_sync_task(ctx: BfBBContext):
     logger.info("Starting Dolphin connector. Use /dolphin for status information")
     while not ctx.exit_event.is_set():
@@ -1204,10 +1369,12 @@ async def dolphin_sync_task(ctx: BfBBContext):
                         continue
                     ctx.current_scene_key = f"bfbb_current_scene_T{ctx.team}_P{ctx.slot}"
                     ctx.set_notify(ctx.current_scene_key)
-                    if "DeathLink" in ctx.tags:
+                    if ctx.death_link and not ctx.disable_death_link:
                         await check_death(ctx)
                     await give_items(ctx)
                     await check_locations(ctx)
+                    if ctx.ring_link and not ctx.disable_ring_link:
+                        await handle_ring_link(ctx)
                     # await set_locations(ctx)
                 else:
                     if not ctx.auth:

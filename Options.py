@@ -63,6 +63,17 @@ class RandomizeGateCost(Choice):
     option_high = 3
     default = 0
 
+class RingLink(Toggle):
+    """Enables Ring Link support for Shiny Objects"""
+    display_name = "Ring Link"
+    default = 0
+
+class ShinyObjectToRingRatio(Range):
+    """How many Shiny Objects should amount to one Ring in Ring Link"""
+    display_name = "Shiny Object To Ring Ratio"
+    range_start = 1
+    range_end = 100
+    default = 10
 
 @dataclass
 class BfBBOptions(PerGameCommonOptions):
@@ -75,3 +86,5 @@ class BfBBOptions(PerGameCommonOptions):
     include_purple_so: IncludePurpleSO
     randomize_gate_cost: RandomizeGateCost
     death_link: DeathLink
+    ring_link: RingLink
+    shiny_object_to_ring_ratio: ShinyObjectToRingRatio
