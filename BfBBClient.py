@@ -629,6 +629,7 @@ class BfBBContext(CommonContext):
         self.dolphin_sync_task = None
         self.dolphin_status = CONNECTION_INITIAL_STATUS
         self.awaiting_rom = False
+        self.password_requested = False
         self.given_socks = 0
         self.spat_count = 0
         self.sock_count = 0
@@ -730,15 +731,17 @@ class BfBBContext(CommonContext):
         self.sock_count = len([item for item in self.items_received if item.item == base_id + 1])
 
     async def server_auth(self, password_requested: bool = False):
-        if password_requested and not self.password:
-            logger.info('Enter the password required to join this game:')
-            self.password = await self.console_input()
+        self.password_requested = password_requested
         if not self.auth:
             if self.awaiting_rom:
                 return
             self.awaiting_rom = True
-            logger.info('Awaiting connection to Dolphin to get player information')
+            logger.info('Awaiting connection to Dolphin and loaded save file to get player information')
             return
+        else:
+            self.awaiting_rom = False
+        if password_requested and not self.password:
+            await super(BfBBContext, self).server_auth(password_requested)
         await self.send_connect()
 
     def run_gui(self):
@@ -1303,9 +1306,12 @@ def validate_save(ctx: BfBBContext) -> bool:
             # write info to save
             dolphin_memory_engine.write_bytes(SAVED_SLOT_NAME_ADDR, slot_bytes)
             dolphin_memory_engine.write_bytes(SAVED_SEED_ADDR, seed_bytes)
+            logger.debug("saved slot/seed info")
             return True
         elif slot_bytes == saved_slot_bytes and seed_bytes == saved_seed_bytes:
             return True
+    else:
+        logger.warn("ROM doesn't contain any slot/seed info. Please make sure your apworld version match between client and patch file and then re-patch.")
     return False
 
 
@@ -1389,7 +1395,7 @@ async def dolphin_sync_task(ctx: BfBBContext):
                             await ctx.disconnect()
                             await asyncio.sleep(5)
                     if ctx.awaiting_rom:
-                        await ctx.server_auth()
+                        await ctx.server_auth(ctx.password_requested)
                 await asyncio.sleep(.5)
             else:
                 if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
