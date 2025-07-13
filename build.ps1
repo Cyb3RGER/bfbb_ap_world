@@ -6,7 +6,7 @@ $tmpPath = "release\tmp"
 $apworldBuildPath = "release\tmp\bfbb"
 $apworldOutPath = "release\bfbb.apworld"
 $apworldOutZip = "release\tmp\bfbb.zip"
-$py_versions = "3.8", "3.11", "3.12"
+$py_versions = "3.11", "3.12"
 
 
 foreach ($py_version in $py_versions)

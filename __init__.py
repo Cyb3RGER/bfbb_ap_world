@@ -18,11 +18,11 @@ from .Rules import set_rules
 from .names import ItemNames, ConnectionNames
 
 
-def run_client():
-    print('running bfbb client')
+def run_client(file=None, *args):
+    print('running bfbb client', file, args)
     from worlds.bfbb.BfBBClient import main  # lazy import
     file_types = (('BfBB Patch File', ('.apbfbb',)), ('NGC iso', ('.gcm',)),)
-    kwargs = {'patch_file': Utils.open_filename("Select .apbfbb", file_types)}
+    kwargs = {'patch_file': file or Utils.open_filename("Select .apbfbb", file_types)}
     p = Process(target=main, kwargs=kwargs)
     p.start()
 

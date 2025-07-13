@@ -1230,13 +1230,8 @@ async def check_locations(ctx: BfBBContext):
     if CheckTypes.PURPLE_SO in ctx.included_check_types:
         await _check_purple_so(ctx, ctx.locations_checked)
     # ignore already in server state
-    locations_checked = ctx.locations_checked.difference(ctx.checked_locations)
-    if locations_checked:
-        await ctx.send_msgs([
-            {"cmd": "LocationChecks",
-             "locations": locations_checked}
-        ])
-        print([ctx.location_names[location] for location in locations_checked])
+    send_locations = await ctx.check_locations(ctx.locations_checked)
+    print([ctx.location_names[location] for location in send_locations])
 
 
 async def check_alive(ctx: BfBBContext):
@@ -1310,6 +1305,12 @@ def validate_save(ctx: BfBBContext) -> bool:
             return True
         elif slot_bytes == saved_slot_bytes and seed_bytes == saved_seed_bytes:
             return True
+        else:
+            if slot_bytes != saved_slot_bytes:
+                logger.warn(f"Saved slot info do not match: {slot_bytes} != {saved_slot_bytes}")
+            if seed_bytes != saved_seed_bytes:
+                logger.warn(f"Saved seed info do not match: {seed_bytes} != {saved_seed_bytes}")
+            return False
     else:
         logger.warn("ROM doesn't contain any slot/seed info. Please make sure your apworld version match between client and patch file and then re-patch.")
     return False

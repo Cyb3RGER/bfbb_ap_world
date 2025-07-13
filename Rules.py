@@ -1,11 +1,10 @@
 import typing
-from typing import Callable, Dict, List, Tuple
+from typing import Dict, List
 
 from BaseClasses import MultiWorld, CollectionState, Entrance
-from worlds.AutoWorld import LogicMixin
+from worlds.generic.Rules import set_rule, add_rule
 from . import BfBBOptions
 from .names import ConnectionNames, ItemNames, LocationNames, RegionNames
-from worlds.generic.Rules import set_rule, add_rule, CollectionRule
 
 
 def can_farm_so(state: CollectionState, player: int) -> bool:
@@ -15,24 +14,22 @@ def can_farm_so(state: CollectionState, player: int) -> bool:
             state.can_reach(RegionNames.db02, "Region", player)
     )
 
+so_values = {
+    ItemNames.so_100: 0,
+    ItemNames.so_250: 0,
+    ItemNames.so_500: 500,
+    ItemNames.so_750: 750,
+    ItemNames.so_1000: 1000,
+}
 
-class BfBBLogic(LogicMixin):
-    values = {
-        ItemNames.so_100: 0,
-        ItemNames.so_250: 0,
-        ItemNames.so_500: 500,
-        ItemNames.so_750: 750,
-        ItemNames.so_1000: 1000,
-    }
+def has_so_amount(state: CollectionState, player: int, amount: int):
+    return get_so_amount(state, player) >= amount
 
-    def has_so_amount(self, player: int, amount: int):
-        return self.get_so_amount(player) >= amount
-
-    def get_so_amount(self, player: int):
-        if can_farm_so(self, player):
-            # ToDo: maybe return some lower number?
-            return 999999
-        return sum(self.count(item_name, player) * amount for item_name, amount in self.values.items())
+def get_so_amount(state: CollectionState, player: int):
+    if can_farm_so(state, player):
+        # ToDo: maybe return some lower number?
+        return 999999
+    return sum(state.count(item_name, player) * amount for item_name, amount in so_values.items())
 
 
 spat_rules = [
@@ -185,14 +182,14 @@ so_krabs_rules = [
     # locations
     {
         ItemNames.spat: {
-            LocationNames.spat_ks_01: lambda player: lambda state: state.has_so_amount(player, 3000 / 2),
-            LocationNames.spat_ks_02: lambda player: lambda state: state.has_so_amount(player, 6500 / 2),
-            LocationNames.spat_ks_03: lambda player: lambda state: state.has_so_amount(player, 10500 / 2),
-            LocationNames.spat_ks_04: lambda player: lambda state: state.has_so_amount(player, 15000 / 2),
-            LocationNames.spat_ks_05: lambda player: lambda state: state.has_so_amount(player, 20000 / 2),
-            LocationNames.spat_ks_06: lambda player: lambda state: state.has_so_amount(player, 25500 / 2),
-            LocationNames.spat_ks_07: lambda player: lambda state: state.has_so_amount(player, 32000 / 2),
-            LocationNames.spat_ks_08: lambda player: lambda state: state.has_so_amount(player, 39500 / 2),
+            LocationNames.spat_ks_01: lambda player: lambda state: has_so_amount(state, player, 3000 / 2),
+            LocationNames.spat_ks_02: lambda player: lambda state: has_so_amount(state, player, 6500 / 2),
+            LocationNames.spat_ks_03: lambda player: lambda state: has_so_amount(state, player, 10500 / 2),
+            LocationNames.spat_ks_04: lambda player: lambda state: has_so_amount(state, player, 15000 / 2),
+            LocationNames.spat_ks_05: lambda player: lambda state: has_so_amount(state, player, 20000 / 2),
+            LocationNames.spat_ks_06: lambda player: lambda state: has_so_amount(state, player, 25500 / 2),
+            LocationNames.spat_ks_07: lambda player: lambda state: has_so_amount(state, player, 32000 / 2),
+            LocationNames.spat_ks_08: lambda player: lambda state: has_so_amount(state, player, 39500 / 2),
         }
     }
 ]
