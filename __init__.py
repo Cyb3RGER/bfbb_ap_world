@@ -70,6 +70,7 @@ class BattleForBikiniBottom(World):
     location_name_to_id = location_table
 
     web = BattleForBikiniBottomWeb()
+    ut_can_gen_without_yaml = True
 
     def __init__(self, multiworld: "MultiWorld", player: int):
         super().__init__(multiworld, player)
@@ -81,6 +82,11 @@ class BattleForBikiniBottom(World):
         self.sock_counter: int = 0
 
     def generate_early(self) -> None:
+        if hasattr(self.multiworld, "re_gen_passthrough"):
+            if self.game in self.multiworld.re_gen_passthrough:
+                self.apply_options_from_slot_data(self.multiworld.re_gen_passthrough[self.game])
+                return
+
         if self.options.required_spatulas.value > self.options.available_spatulas.value:
             self.options.required_spatulas.value = self.options.available_spatulas.value
         if self.options.randomize_gate_cost.value > RandomizeGateCost.option_off:
@@ -203,6 +209,20 @@ class BattleForBikiniBottom(World):
             "include_purple_so": self.options.include_purple_so.value,
             "gate_costs": self.gate_costs
         }
+
+    @staticmethod
+    def interpret_slot_data(slot_data: dict):
+        return slot_data
+
+    def apply_options_from_slot_data(self, slot_data: dict):
+        for k, v in slot_data.items():
+            if k == "gate_costs":
+                self.gate_costs = v
+                continue
+            if hasattr(self.options, k):
+                option = getattr(self.options, k)
+                if option.value != v:
+                    option.value = v
 
     def create_item(self, name: str, ) -> Item:
         item_data = item_table[name]
