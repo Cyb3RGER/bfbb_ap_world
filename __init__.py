@@ -1,10 +1,8 @@
 import itertools
 import os
 import typing
-from multiprocessing import Process
 from typing import TextIO
 
-import Utils
 from BaseClasses import Item, Tutorial, ItemClassification
 from worlds.AutoWorld import World, WebWorld
 from worlds.LauncherComponents import Component, components, Type, SuffixIdentifier
@@ -15,20 +13,19 @@ from .Options import BfBBOptions, RandomizeGateCost
 from .Regions import create_regions
 from .Rom import BfBBContainer
 from .Rules import set_rules
+from .Settings import BattleForBikiniBottomSettings
 from .names import ItemNames, ConnectionNames
 
 
-def run_client(file=None, *args):
-    print('running bfbb client', file, args)
-    from worlds.bfbb.BfBBClient import main  # lazy import
-    file_types = (('BfBB Patch File', ('.apbfbb',)), ('NGC iso', ('.gcm',)),)
-    kwargs = {'patch_file': file or Utils.open_filename("Select .apbfbb", file_types)}
-    p = Process(target=main, kwargs=kwargs)
-    p.start()
+def run_client(*args):
+    print('running bfbb client', args)
+    from worlds.LauncherComponents import launch
+    from worlds.bfbb.BfBBClient import launch as bfbb_launch  # lazy import
+    launch(bfbb_launch, "BfBB Client", args=args)
 
 
 components.append(Component("BfBB Client", func=run_client, component_type=Type.CLIENT,
-                            file_identifier=SuffixIdentifier('.apbfbb')))
+                            file_identifier=SuffixIdentifier('.apbfbb'), game_name="bfbb", supports_uri=True))
 
 
 class BattleForBikiniBottomWeb(WebWorld):
@@ -40,6 +37,7 @@ class BattleForBikiniBottomWeb(WebWorld):
         "setup/en",
         ["Cyb3R"]
     )]
+    theme = "ocean"
 
 
 default_gate_costs: typing.Dict[str, int] = {
@@ -64,6 +62,8 @@ class BattleForBikiniBottom(World):
     game = "Battle for Bikini Bottom"
     options_dataclass = BfBBOptions
     options: BfBBOptions
+    settings: typing.ClassVar[BattleForBikiniBottomSettings]
+    settings_key = "bfbb_options"
     topology_present = False
 
     item_name_to_id = {name: data.id for name, data in item_table.items()}

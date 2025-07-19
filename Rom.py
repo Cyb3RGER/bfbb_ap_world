@@ -2,12 +2,13 @@ import hashlib
 import json
 import logging
 import os
+import sys
 import tempfile
 import zipfile
 from enum import Enum
 from typing import Any
 
-import Utils
+from settings import get_settings
 from worlds.Files import AutoPatchRegister, APPlayerContainer
 from . import Patches
 from .inc.wwrando.wwlib.gcm import GCM
@@ -98,7 +99,7 @@ class BfBBContainer(APPlayerContainer, metaclass=AutoPatchRegister):
         return opened_zipfile.read("seed")
 
     @classmethod
-    async def apply_hiphop_changes(cls, opened_zipfile: zipfile.ZipFile, source_iso, dest_iso):
+    def apply_hiphop_changes(cls, opened_zipfile: zipfile.ZipFile, source_iso, dest_iso):
         randomize_gate_cost = BfBBContainer.get_int(opened_zipfile, "randomize_gate_cost")
         gate_costs = BfBBContainer.get_json_obj(opened_zipfile, "gate_costs.json")
         include_skills = BfBBContainer.get_bool(opened_zipfile, "include_skills")
@@ -124,329 +125,342 @@ class BfBBContainer(APPlayerContainer, metaclass=AutoPatchRegister):
             lib_path = lib_path + 'bfbb/inc/'
         # print(sys.path)
         cls.logger.debug('--before pythonnet.load--')
-        # setup pythonnet
-        from pythonnet import load, set_runtime, get_runtime_info
-        set_runtime('netfx')
-        cls.logger.debug(f"runtime info: {get_runtime_info()}")
-        load()
-        import clr
-        from System import Environment
-        from System.Runtime.InteropServices  import RuntimeInformation
-        from System.Reflection import Assembly
-
-        # some version logging
-        clr_version = Assembly.Load("System.Runtime").GetName().Version
-        cls.logger.debug(f"CLR Version: {clr_version}")
-        cls.logger.debug(f"Environment.Version: {Environment.Version}")
-        cls.logger.debug(f"RuntimeInformation.FrameworkDescription: {RuntimeInformation.FrameworkDescription}")
-        # extract ISO content
         extraction_temp_dir = tempfile.TemporaryDirectory()
-        extraction_path = extraction_temp_dir.name
-        gcm = GCM(source_iso)
-        gcm.read_entire_disc()
-        generator = gcm.export_disc_to_folder_with_changed_files(output_folder_path=extraction_path,
-                                                                 only_changed_files=False)
-        cls.logger.info('--extracting--')
-        while True:
-            file_path, files_done = next(generator)
-            # cls.logger.debug((file_path, files_done))
-            if files_done == -1:
-                break
-        cls.logger.info('--extraction done--')
-        cls.logger.info('--making changes--')
-        # load and setup IP libs
-        clr.AddReference(os.path.abspath(lib_path + '/IP/IndustrialPark.dll'))
-        clr.AddReference(os.path.abspath(lib_path + '/IP/HipHopFile.dll'))
-        clr.AddReference(os.path.abspath(lib_path + '/IP/Randomizer.dll'))
-        from HipHopFile import Platform, Game
-        from IndustrialPark import ArchiveEditorFunctions, Link, HexUIntTypeConverter, AutomaticUpdater
-        from IndustrialPark.Randomizer import RandomizableArchive
+        try:
+            # setup pythonnet
+            from pythonnet import load, set_runtime, get_runtime_info
+            set_runtime('netfx')
+            cls.logger.debug(f"runtime info: {get_runtime_info()}")
+            load()
+            import clr
+            from System import Environment
+            from System.Runtime.InteropServices  import RuntimeInformation
+            from System.Reflection import Assembly
 
-        if not os.path.exists(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-master/'):
-            import requests
-            import io
-            editor_files_url = "https://github.com/igorseabra4/IndustrialPark-EditorFiles/archive/66a918fe76dbc7f7a39d39aa1f9991587d8f0bde.zip"
-            response = requests.get(editor_files_url)
-            # Check if the request was successful
-            if response.status_code == 200:
-                # Read the content of the response
-                assert hashlib.sha256(response.content).hexdigest() == "3ac4f52d9361195482d361b53b3893eb7dd460198118d00a776a5af2130bbec0", "failed to download editor-files: doesn't match expected hash"
-                zip_content = io.BytesIO(response.content)
+            # some version logging
+            clr_version = Assembly.Load("System.Runtime").GetName().Version
+            cls.logger.debug(f"CLR Version: {clr_version}")
+            cls.logger.debug(f"Environment.Version: {Environment.Version}")
+            cls.logger.debug(f"RuntimeInformation.FrameworkDescription: {RuntimeInformation.FrameworkDescription}")
+            # extract ISO content
+            extraction_path = extraction_temp_dir.name
+            gcm = GCM(source_iso)
+            gcm.read_entire_disc()
+            generator = gcm.export_disc_to_folder_with_changed_files(output_folder_path=extraction_path,
+                                                                     only_changed_files=False)
+            cls.logger.info('--extracting--')
+            while True:
+                file_path, files_done = next(generator)
+                # cls.logger.debug((file_path, files_done))
+                if files_done == -1:
+                    break
+            cls.logger.info('--extraction done--')
+            cls.logger.info('--making changes--')
+            # load and setup IP libs
+            clr.AddReference(os.path.abspath(lib_path + '/IP/IndustrialPark.dll'))
+            clr.AddReference(os.path.abspath(lib_path + '/IP/HipHopFile.dll'))
+            clr.AddReference(os.path.abspath(lib_path + '/IP/Randomizer.dll'))
+            from HipHopFile import Platform, Game
+            from IndustrialPark import ArchiveEditorFunctions, Link, HexUIntTypeConverter, AutomaticUpdater
+            from IndustrialPark.Randomizer import RandomizableArchive
 
-                # Open the zip file
-                with zipfile.ZipFile(zip_content, 'r') as zip_ref:
-                    # Extract all files to a directory (change the path accordingly)
-                    zip_ref.extractall(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/')
-                os.rename(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-66a918fe76dbc7f7a39d39aa1f9991587d8f0bde',f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-master')
+            if not os.path.exists(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-master/'):
+                import requests
+                import io
+                editor_files_url = "https://github.com/igorseabra4/IndustrialPark-EditorFiles/archive/66a918fe76dbc7f7a39d39aa1f9991587d8f0bde.zip"
+                response = requests.get(editor_files_url)
+                # Check if the request was successful
+                if response.status_code == 200:
+                    # Read the content of the response
+                    assert hashlib.sha256(response.content).hexdigest() == "3ac4f52d9361195482d361b53b3893eb7dd460198118d00a776a5af2130bbec0", "failed to download editor-files: doesn't match expected hash"
+                    zip_content = io.BytesIO(response.content)
 
-                cls.logger.info("File successfully downloaded and extracted editor files.")
-            else:
-                cls.logger.warning("Failed to download editor file.")
+                    # Open the zip file
+                    with zipfile.ZipFile(zip_content, 'r') as zip_ref:
+                        # Extract all files to a directory (change the path accordingly)
+                        zip_ref.extractall(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/')
+                    os.rename(f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-66a918fe76dbc7f7a39d39aa1f9991587d8f0bde',f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-master')
 
-        class EventIDs(Enum):
-            Increment = 0x000B
-            Decrement = 0x000C
-            GivePowerUp = 0x0101
-            GiveCollectables = 0x01C2
+                    cls.logger.info("File successfully downloaded and extracted editor files.")
+                else:
+                    cls.logger.warning("Failed to download editor file.")
 
-        class LinkData:
-            event = 0
-            target = 0
+            class EventIDs(Enum):
+                Increment = 0x000B
+                Decrement = 0x000C
+                GivePowerUp = 0x0101
+                GiveCollectables = 0x01C2
 
-            def __init__(self, event: EventIDs, target):
-                self.event = event.value
-                self.target = target
+            class LinkData:
+                event = 0
+                target = 0
 
-            def compare(self, link: Link):
-                return link.EventSendID == self.event and link.TargetAsset.op_Implicit(link.TargetAsset) == self.target
+                def __init__(self, event: EventIDs, target):
+                    self.event = event.value
+                    self.target = target
 
-        files_to_check_lvl_items = {
-            'jf04': {
-                # CUTSCENE_KJ_END
-                0xbd99ade0: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3)
-                ]
-            },
-            'gl01': {
-                # BALLOON_A_PLAT
-                0x3db4fe59: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                    LinkData(EventIDs.Decrement, 0xa6662680),
-                ],
-                # BALLOON_B_PLAT
-                0x393949cc: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                    LinkData(EventIDs.Decrement, 0xa6662680),
-                ],
-                # BALLOON_C_PLAT
-                0x34bd953f: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                    LinkData(EventIDs.Decrement, 0xa6662680),
-                ],
-                # BALLOON_D_PLAT
-                0x3041e0b2: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                    LinkData(EventIDs.Decrement, 0xa6662680),
-                ],
-                # BALLOON_E_PLAT
-                0x2bc62c25: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                    LinkData(EventIDs.Decrement, 0xa6662680),
-                ],
-                # BALLOON_A_COUNT_DISP
-                0x078dc464: [
-                    LinkData(EventIDs.Decrement, 0xa6662680),
-                ],
-                # BALLOON_B_COUNT_DISP
-                0xa65659df: [
-                    LinkData(EventIDs.Decrement, 0xa6662680),
-                ],
-                # BALLOON_C_COUNT_DISP
-                0x451eef5a: [
-                    LinkData(EventIDs.Decrement, 0xa6662680),
-                ],
-                # BALLOON_D_COUNT_DISP
-                0xe3e784d5: [
-                    LinkData(EventIDs.Decrement, 0xa6662680),
-                ],
-                # BALLOON_E_COUNT_DISP
-                0x82b01a50: [
-                    LinkData(EventIDs.Decrement, 0xa6662680),
-                ],
-            },
-            'bc02': {
-                0x5e64831b: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3)
-                ],
-                0x5e64831c: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3)
-                ]
-            },
-            'bc03': {
-                0x91f2a6cf: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3)
-                ],
-            },
-            'bc04': {
-                0xc1841225: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3)
-                ],
-            },
-            'sm03': {
-                0xd4d3bec2: [
-                    LinkData(EventIDs.Decrement, 0xc4e703d6)
-                ],
-                0xd4d3bec3: [
-                    LinkData(EventIDs.Decrement, 0xc4e703d6)
-                ],
-                0xd4d3bec4: [
-                    LinkData(EventIDs.Decrement, 0xc4e703d6)
-                ],
-                0xd4d3bec5: [
-                    LinkData(EventIDs.Decrement, 0xc4e703d6)
-                ],
-                0xd4d3bec6: [
-                    LinkData(EventIDs.Decrement, 0xc4e703d6)
-                ],
-                0xd4d3bec7: [
-                    LinkData(EventIDs.Decrement, 0xc4e703d6)
-                ],
-                0xd4d3bec8: [
-                    LinkData(EventIDs.Decrement, 0xc4e703d6)
-                ],
-                0xd4d3bec9: [
-                    LinkData(EventIDs.Decrement, 0xc4e703d6)
-                ],
-            },
-            'kf01': {
-                0x153CCF73: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                ],
-                0x153CCF74: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                ],
-                0x153CCF75: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                ],
-            },
-            'kf02': {
-                0x9c2d8bb3: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                ],
-                0x9c2d8bb4: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                ],
-            },
-            'kf04': {
-                0x609203fd: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                ],
-                0x96017696: [
-                    LinkData(EventIDs.Increment, 0xed81694f)
-                ],
-                0x96017697: [
-                    LinkData(EventIDs.Increment, 0xed81694f)
-                ],
-                0x96017698: [
-                    LinkData(EventIDs.Increment, 0xed81694f)
-                ],
-                0x96017699: [
-                    LinkData(EventIDs.Increment, 0xed81694f)
-                ],
-                0x9601769a: [
-                    LinkData(EventIDs.Increment, 0xed81694f)
-                ],
-                0x9601769b: [
-                    LinkData(EventIDs.Increment, 0xed81694f)
-                ],
-            },
-            'gy03': {
-                0x1344a38c: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                    LinkData(EventIDs.Decrement, 0x9a101de7),
-                ],
-                0x1344a38d: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                    LinkData(EventIDs.Decrement, 0x9a101de7),
-                ],
-                0x1344a38e: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                    LinkData(EventIDs.Decrement, 0x9a101de7),
-                ],
-                0x1344a38f: [
-                    LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
-                    LinkData(EventIDs.Decrement, 0x9a101de7),
-                ],
-                0x46d4fa25: [
-                    LinkData(EventIDs.Decrement, 0x9a101de7),
-                ],
-                0x46d4fa26: [
-                    LinkData(EventIDs.Decrement, 0x9a101de7),
-                ],
-                0x46d4fa27: [
-                    LinkData(EventIDs.Decrement, 0x9a101de7),
-                ],
-                0x46d4fa28: [
-                    LinkData(EventIDs.Decrement, 0x9a101de7),
-                ],
-            },
-        }
-        files_to_check_skills = {
-            'b101': {
-                0xcc4ea457: [
-                    LinkData(EventIDs.GivePowerUp, 0xBD7097e3)
-                ]
-            },
-            'b201': {
-                0xeb3aada0: [
-                    LinkData(EventIDs.GivePowerUp, 0x00002abb)
-                ]
-            },
-        }
-        files_to_check: dict[str, dict[int, list[LinkData]]] = {}
-        if include_skills:
-            files_to_check.update(files_to_check_skills)
-        if include_level_items:
-            files_to_check.update(files_to_check_lvl_items)
-        HexUIntTypeConverter.Legacy = True
-        editor_funcs = RandomizableArchive()
-        editor_funcs.SkipTextureDisplay = True
-        editor_funcs.Platform = Platform.GameCube
-        editor_funcs.Game = Game.BFBB
-        editor_funcs.standalone = True
-        editor_funcs.NoLayers = True
-        editor_funcs.editorFilesFolder = f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-master/'
-        # make changes with IP
-        for name, assets_to_check in files_to_check.items():
-            editor_funcs.OpenFile(extraction_path + f'/files/{name[:-2]}/{name}.HIP', False, Platform.Unknown)
-            for id, links_to_check in assets_to_check.items():
-                assert id in editor_funcs.assetDictionary, f"{id} is not a valid id in {name}.HIP"
-                links = editor_funcs.assetDictionary[id].Links
-                links_to_remove = []
-                for data in links_to_check:
-                    found = False
-                    for link in links:
-                        if data.compare(link):
-                            # cls.logger.debug(f"removing link {link.ToString()} from 0x{id:x} in {name}.HIP")
-                            links_to_remove.append(link)
-                            found = True
-                    if not found:
-                        assert False, f"link not found {data.event} => 0x{data.target:x} on 0x{id:x} in {name}.HIP"
-                editor_funcs.assetDictionary[id].Links = [link for link in links if link not in links_to_remove]
-            editor_funcs.Save()
+                def compare(self, link: Link):
+                    return link.EventSendID == self.event and link.TargetAsset.op_Implicit(link.TargetAsset) == self.target
 
-        if randomize_gate_cost > 0:
-            editor_funcs.OpenFile(extraction_path + f'/files/hb/hb01.HIP', False, Platform.Unknown)
-            if editor_funcs.ShuffleSpatulaGatesHB01(gate_costs[ConnectionNames.hub1_bb01],
-                                                    gate_costs[ConnectionNames.hub1_gl01],
-                                                    gate_costs[ConnectionNames.hub1_b1],
-                                                    gate_costs[ConnectionNames.hub2_rb01],
-                                                    gate_costs[ConnectionNames.hub2_sm01],
-                                                    gate_costs[ConnectionNames.hub2_b2],
-                                                    gate_costs[ConnectionNames.hub3_kf01],
-                                                    gate_costs[ConnectionNames.hub3_gy01]):
+            files_to_check_lvl_items = {
+                'jf04': {
+                    # CUTSCENE_KJ_END
+                    0xbd99ade0: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3)
+                    ]
+                },
+                'gl01': {
+                    # BALLOON_A_PLAT
+                    0x3db4fe59: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                        LinkData(EventIDs.Decrement, 0xa6662680),
+                    ],
+                    # BALLOON_B_PLAT
+                    0x393949cc: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                        LinkData(EventIDs.Decrement, 0xa6662680),
+                    ],
+                    # BALLOON_C_PLAT
+                    0x34bd953f: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                        LinkData(EventIDs.Decrement, 0xa6662680),
+                    ],
+                    # BALLOON_D_PLAT
+                    0x3041e0b2: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                        LinkData(EventIDs.Decrement, 0xa6662680),
+                    ],
+                    # BALLOON_E_PLAT
+                    0x2bc62c25: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                        LinkData(EventIDs.Decrement, 0xa6662680),
+                    ],
+                    # BALLOON_A_COUNT_DISP
+                    0x078dc464: [
+                        LinkData(EventIDs.Decrement, 0xa6662680),
+                    ],
+                    # BALLOON_B_COUNT_DISP
+                    0xa65659df: [
+                        LinkData(EventIDs.Decrement, 0xa6662680),
+                    ],
+                    # BALLOON_C_COUNT_DISP
+                    0x451eef5a: [
+                        LinkData(EventIDs.Decrement, 0xa6662680),
+                    ],
+                    # BALLOON_D_COUNT_DISP
+                    0xe3e784d5: [
+                        LinkData(EventIDs.Decrement, 0xa6662680),
+                    ],
+                    # BALLOON_E_COUNT_DISP
+                    0x82b01a50: [
+                        LinkData(EventIDs.Decrement, 0xa6662680),
+                    ],
+                },
+                'bc02': {
+                    0x5e64831b: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3)
+                    ],
+                    0x5e64831c: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3)
+                    ]
+                },
+                'bc03': {
+                    0x91f2a6cf: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3)
+                    ],
+                },
+                'bc04': {
+                    0xc1841225: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3)
+                    ],
+                },
+                'sm03': {
+                    0xd4d3bec2: [
+                        LinkData(EventIDs.Decrement, 0xc4e703d6)
+                    ],
+                    0xd4d3bec3: [
+                        LinkData(EventIDs.Decrement, 0xc4e703d6)
+                    ],
+                    0xd4d3bec4: [
+                        LinkData(EventIDs.Decrement, 0xc4e703d6)
+                    ],
+                    0xd4d3bec5: [
+                        LinkData(EventIDs.Decrement, 0xc4e703d6)
+                    ],
+                    0xd4d3bec6: [
+                        LinkData(EventIDs.Decrement, 0xc4e703d6)
+                    ],
+                    0xd4d3bec7: [
+                        LinkData(EventIDs.Decrement, 0xc4e703d6)
+                    ],
+                    0xd4d3bec8: [
+                        LinkData(EventIDs.Decrement, 0xc4e703d6)
+                    ],
+                    0xd4d3bec9: [
+                        LinkData(EventIDs.Decrement, 0xc4e703d6)
+                    ],
+                },
+                'kf01': {
+                    0x153CCF73: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                    ],
+                    0x153CCF74: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                    ],
+                    0x153CCF75: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                    ],
+                },
+                'kf02': {
+                    0x9c2d8bb3: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                    ],
+                    0x9c2d8bb4: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                    ],
+                },
+                'kf04': {
+                    0x609203fd: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                    ],
+                    0x96017696: [
+                        LinkData(EventIDs.Increment, 0xed81694f)
+                    ],
+                    0x96017697: [
+                        LinkData(EventIDs.Increment, 0xed81694f)
+                    ],
+                    0x96017698: [
+                        LinkData(EventIDs.Increment, 0xed81694f)
+                    ],
+                    0x96017699: [
+                        LinkData(EventIDs.Increment, 0xed81694f)
+                    ],
+                    0x9601769a: [
+                        LinkData(EventIDs.Increment, 0xed81694f)
+                    ],
+                    0x9601769b: [
+                        LinkData(EventIDs.Increment, 0xed81694f)
+                    ],
+                },
+                'gy03': {
+                    0x1344a38c: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                        LinkData(EventIDs.Decrement, 0x9a101de7),
+                    ],
+                    0x1344a38d: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                        LinkData(EventIDs.Decrement, 0x9a101de7),
+                    ],
+                    0x1344a38e: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                        LinkData(EventIDs.Decrement, 0x9a101de7),
+                    ],
+                    0x1344a38f: [
+                        LinkData(EventIDs.GiveCollectables, 0xBD7097e3),
+                        LinkData(EventIDs.Decrement, 0x9a101de7),
+                    ],
+                    0x46d4fa25: [
+                        LinkData(EventIDs.Decrement, 0x9a101de7),
+                    ],
+                    0x46d4fa26: [
+                        LinkData(EventIDs.Decrement, 0x9a101de7),
+                    ],
+                    0x46d4fa27: [
+                        LinkData(EventIDs.Decrement, 0x9a101de7),
+                    ],
+                    0x46d4fa28: [
+                        LinkData(EventIDs.Decrement, 0x9a101de7),
+                    ],
+                },
+            }
+            files_to_check_skills = {
+                'b101': {
+                    0xcc4ea457: [
+                        LinkData(EventIDs.GivePowerUp, 0xBD7097e3)
+                    ]
+                },
+                'b201': {
+                    0xeb3aada0: [
+                        LinkData(EventIDs.GivePowerUp, 0x00002abb)
+                    ]
+                },
+            }
+            files_to_check: dict[str, dict[int, list[LinkData]]] = {}
+            if include_skills:
+                files_to_check.update(files_to_check_skills)
+            if include_level_items:
+                files_to_check.update(files_to_check_lvl_items)
+            HexUIntTypeConverter.Legacy = True
+            editor_funcs = RandomizableArchive()
+            editor_funcs.SkipTextureDisplay = True
+            editor_funcs.Platform = Platform.GameCube
+            editor_funcs.Game = Game.BFBB
+            editor_funcs.standalone = True
+            editor_funcs.NoLayers = True
+            editor_funcs.editorFilesFolder = f'{lib_path}/IP/Resources/IndustrialPark-EditorFiles/IndustrialPark-EditorFiles-master/'
+            # make changes with IP
+            for name, assets_to_check in files_to_check.items():
+                editor_funcs.OpenFile(extraction_path + f'/files/{name[:-2]}/{name}.HIP', False, Platform.Unknown)
+                for id, links_to_check in assets_to_check.items():
+                    assert id in editor_funcs.assetDictionary, f"{id} is not a valid id in {name}.HIP"
+                    links = editor_funcs.assetDictionary[id].Links
+                    links_to_remove = []
+                    for data in links_to_check:
+                        found = False
+                        for link in links:
+                            if data.compare(link):
+                                # cls.logger.debug(f"removing link {link.ToString()} from 0x{id:x} in {name}.HIP")
+                                links_to_remove.append(link)
+                                found = True
+                        if not found:
+                            assert False, f"link not found {data.event} => 0x{data.target:x} on 0x{id:x} in {name}.HIP"
+                    editor_funcs.assetDictionary[id].Links = [link for link in links if link not in links_to_remove]
+                editor_funcs.Save()
+
+            if randomize_gate_cost > 0:
+                editor_funcs.OpenFile(extraction_path + f'/files/hb/hb01.HIP', False, Platform.Unknown)
+                if editor_funcs.ShuffleSpatulaGatesHB01(gate_costs[ConnectionNames.hub1_bb01],
+                                                        gate_costs[ConnectionNames.hub1_gl01],
+                                                        gate_costs[ConnectionNames.hub1_b1],
+                                                        gate_costs[ConnectionNames.hub2_rb01],
+                                                        gate_costs[ConnectionNames.hub2_sm01],
+                                                        gate_costs[ConnectionNames.hub2_b2],
+                                                        gate_costs[ConnectionNames.hub3_kf01],
+                                                        gate_costs[ConnectionNames.hub3_gy01]):
+                    editor_funcs.ImportNumbers()
+                editor_funcs.Save()
+            editor_funcs.OpenFile(extraction_path + f'/files/hb/hb08.HIP', False, Platform.Unknown)
+            if editor_funcs.ShuffleSpatulaGatesHB08(gate_costs[ConnectionNames.cb_b3]):
                 editor_funcs.ImportNumbers()
             editor_funcs.Save()
-        editor_funcs.OpenFile(extraction_path + f'/files/hb/hb08.HIP', False, Platform.Unknown)
-        if editor_funcs.ShuffleSpatulaGatesHB08(gate_costs[ConnectionNames.cb_b3]):
-            editor_funcs.ImportNumbers()
-        editor_funcs.Save()
-        cls.logger.info('--done making changes--')
-        # repack ISO (as gcm for better distinction)
-        cls.logger.info('--repacking--')
-        num = gcm.import_all_files_from_disk(input_directory=extraction_path)
-        generator = gcm.export_disc_to_iso_with_changed_files(dest_iso)
-        while True:
-            file_path, files_done = next(generator)
-            # cls.logger.debug((file_path, files_done))
-            if files_done == -1:
-                break
-        cls.logger.info('--repacking done--')
-        # clean up
-        extraction_temp_dir.cleanup()
+            cls.logger.info('--done making changes--')
+            # repack ISO (as gcm for better distinction)
+            cls.logger.info('--repacking--')
+            num = gcm.import_all_files_from_disk(input_directory=extraction_path)
+            generator = gcm.export_disc_to_iso_with_changed_files(dest_iso)
+            while True:
+                file_path, files_done = next(generator)
+                # cls.logger.debug((file_path, files_done))
+                if files_done == -1:
+                    break
+            cls.logger.info('--repacking done--')
+        finally:
+            try:
+                if 'pythonnet' in sys.modules:
+                    from pythonnet import unload
+                    unload()
+                    cls.logger.info("Python.NET runtime has been shut down.")
+            except Exception:
+                cls.logger.warning("Couldn't unload Python.NET runtime.")
+            try:
+                # clean up
+                extraction_temp_dir.cleanup()
+            except Exception:
+                cls.logger.warning("Couldn't clean up temp folder")
+
 
     @classmethod
-    async def apply_binary_changes(cls, opened_zipfile: zipfile.ZipFile, iso):
+    def apply_binary_changes(cls, opened_zipfile: zipfile.ZipFile, iso):
         cls.logger.info('--binary patching--')
         # get slot name and seed hash
         manifest = BfBBContainer.get_json_obj(opened_zipfile, "archipelago.json")
@@ -507,18 +521,12 @@ class BfBBContainer(APPlayerContainer, metaclass=AutoPatchRegister):
         return True
 
 
-def get_base_rom_path(file_name: str = "") -> str:
-    options: Utils.OptionsType = Utils.get_options()
-    if not file_name:
-        # file_name = options["bfbb_options"]["rom_file"]
-        file_name = "Nickelodeon SpongeBob SquarePants - Battle for Bikini Bottom (USA).iso"
-    if not os.path.exists(file_name):
-        file_name = Utils.user_path(file_name)
-    return file_name
+def get_base_rom_path() -> str:
+    return get_settings().bfbb_options.rom_file
 
 
 def validate_hash(file_name: str = ""):
-    file_name = get_base_rom_path(file_name)
+    file_name = get_base_rom_path()
     with open(file_name, "rb") as file:
         base_rom_bytes = file.read()
     basemd5 = hashlib.md5()
