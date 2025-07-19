@@ -446,13 +446,6 @@ class BfBBContainer(APPlayerContainer, metaclass=AutoPatchRegister):
             cls.logger.info('--repacking done--')
         finally:
             try:
-                if 'pythonnet' in sys.modules:
-                    from pythonnet import unload
-                    unload()
-                    cls.logger.info("Python.NET runtime has been shut down.")
-            except Exception:
-                cls.logger.warning("Couldn't unload Python.NET runtime.")
-            try:
                 # clean up
                 extraction_temp_dir.cleanup()
             except Exception:
