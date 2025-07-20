@@ -1,6 +1,6 @@
 import typing
 from BaseClasses import Item, ItemClassification
-from .names import ItemNames
+from .constants import ItemNames, game_name
 
 
 class ItemData(typing.NamedTuple):
@@ -18,7 +18,7 @@ class ItemData(typing.NamedTuple):
 
 
 class BfBBItem(Item):
-    game: str = "Battle for Bikini Bottom"
+    game: str = game_name
 
 
 base_id = 1490000

@@ -1,4 +1,4 @@
-from ..names import LocationNames, ItemNames
+from ..constants import LocationNames, ItemNames
 from . import BfBBTestBase
 
 

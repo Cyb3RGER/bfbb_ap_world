@@ -1,10 +1,10 @@
 import typing
 from BaseClasses import Location
-from .names import LocationNames
+from .constants import LocationNames, game_name
 
 
 class BfBBLocation(Location):
-    game: str = "Battle for Bikini Bottom"
+    game: str = game_name
 
 
 base_id = 1490000

@@ -3,9 +3,10 @@ import os
 import typing
 from typing import TextIO
 
+import settings
 from BaseClasses import Item, Tutorial, ItemClassification
 from worlds.AutoWorld import World, WebWorld
-from worlds.LauncherComponents import Component, components, Type, SuffixIdentifier
+from worlds.LauncherComponents import Component, components, Type, SuffixIdentifier, icon_paths
 from .Events import create_events
 from .Items import item_table, BfBBItem
 from .Locations import location_table, BfBBLocation
@@ -14,18 +15,19 @@ from .Regions import create_regions
 from .Rom import BfBBContainer
 from .Rules import set_rules
 from .Settings import BattleForBikiniBottomSettings
-from .names import ItemNames, ConnectionNames
+from .Tracker import tracker_world_overview, tracker_world_detailed
+from .constants import ItemNames, ConnectionNames, game_name
 
 
 def run_client(*args):
     print('running bfbb client', args)
     from worlds.LauncherComponents import launch
     from worlds.bfbb.BfBBClient import launch as bfbb_launch  # lazy import
-    launch(bfbb_launch, "BfBB Client", args=args)
+    launch(bfbb_launch, f"{game_name} Client", args=args)
 
-
-components.append(Component("BfBB Client", func=run_client, component_type=Type.CLIENT,
-                            file_identifier=SuffixIdentifier('.apbfbb'), game_name="bfbb", supports_uri=True))
+icon_paths["bfbb_icon"] = f"ap:{__name__}/icon.png"
+components.append(Component(f"{game_name} Client", func=run_client, component_type=Type.CLIENT,
+                            file_identifier=SuffixIdentifier('.apbfbb'), game_name=game_name, supports_uri=True, icon="bfbb_icon"))
 
 
 class BattleForBikiniBottomWeb(WebWorld):
@@ -59,7 +61,7 @@ class BattleForBikiniBottom(World):
     SpongeBob SquarePants: Battle for Bikini Bottom
     ToDo
     """
-    game = "Battle for Bikini Bottom"
+    game = game_name
     options_dataclass = BfBBOptions
     options: BfBBOptions
     settings: typing.ClassVar[BattleForBikiniBottomSettings]
@@ -264,3 +266,9 @@ class BattleForBikiniBottom(World):
             }
         )
         apbfbb.write()
+
+
+def apply_tracker_variant():
+    tracker_variant = settings.get_settings().bfbb_options.tracker_variant or 'detailed'
+    BattleForBikiniBottom.tracker_world = tracker_world_overview if tracker_variant == 'overview' else tracker_world_detailed
+apply_tracker_variant()

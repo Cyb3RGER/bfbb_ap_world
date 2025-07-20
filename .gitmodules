@@ -4,3 +4,6 @@
 [submodule "wwrando"]
 	path = inc/wwrando
 	url = https://github.com/Cyb3RGER/wwrando/
+[submodule "tracker"]
+	path = tracker
+	url = https://github.com/Cyb3RGER/bfbb_ap_pack.git

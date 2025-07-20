@@ -4,7 +4,7 @@ from typing import Dict, List
 from BaseClasses import MultiWorld, CollectionState, Entrance
 from worlds.generic.Rules import set_rule, add_rule
 from . import BfBBOptions
-from .names import ConnectionNames, ItemNames, LocationNames, RegionNames
+from .constants import ConnectionNames, ItemNames, LocationNames, RegionNames
 
 
 def can_farm_so(state: CollectionState, player: int) -> bool:

@@ -45,7 +45,9 @@ foreach ($py_version in $py_versions)
 
 # build apworld
 # copy base files needed
-robocopy $basePath $apworldBuildPath /MIR /XD IP_src IndustrialPark-EditorFiles __pycache__ release .git /XF .gitignore .gitmodules *.ps1 TODO.md
+robocopy $basePath $apworldBuildPath /MIR /XD IP_src IndustrialPark-EditorFiles __pycache__ release .git tracker /XF .gitignore .gitmodules *.ps1 TODO.md
+robocopy $basePath/tracker $apworldBuildPath/tracker /MIR /XD .github gen images items layouts scripts var_itemsonly /XF .git .gitignore .gitmodules .luarc.json manifest.json versions.json README.md
+robocopy $basePath/tracker/images $apworldBuildPath/tracker/images /MIR /XD items
 # remove old apworld
 if (Test-Path $apworldOutZip)
 {

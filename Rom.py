@@ -2,7 +2,6 @@ import hashlib
 import json
 import logging
 import os
-import sys
 import tempfile
 import zipfile
 from enum import Enum
@@ -11,14 +10,14 @@ from typing import Any
 from settings import get_settings
 from worlds.Files import AutoPatchRegister, APPlayerContainer
 from . import Patches
+from .constants import ConnectionNames, game_name
 from .inc.wwrando.wwlib.gcm import GCM
-from .names import ConnectionNames
 
 BFBB_HASH = "9e18f9a0032c4f3092945dc38a6517d3"
 
 class BfBBContainer(APPlayerContainer, metaclass=AutoPatchRegister):
+    game = game_name
     hash: str = BFBB_HASH
-    game: str = "Battle for Bikini Bottom"
     patch_file_ending: str = ".apbfbb"
     result_file_ending: str = ".gcm"
     zip_version: int = 1
