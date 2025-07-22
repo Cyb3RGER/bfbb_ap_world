@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Toggle, DeathLink, Range, Choice, PerGameCommonOptions
+from Options import Toggle, DeathLink, Range, Choice, PerGameCommonOptions, StartInventoryPool
 
 
 class AvailableSpatulas(Range):
@@ -77,6 +77,7 @@ class ShinyObjectToRingRatio(Range):
 
 @dataclass
 class BfBBOptions(PerGameCommonOptions):
+    start_inventory_from_pool: StartInventoryPool
     available_spatulas: AvailableSpatulas
     required_spatulas: RequiredSpatulas
     include_socks: IncludeSocks

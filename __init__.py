@@ -5,11 +5,12 @@ from typing import TextIO
 
 import settings
 from BaseClasses import Item, Tutorial, ItemClassification
+from Options import Accessibility
 from worlds.AutoWorld import World, WebWorld
 from worlds.LauncherComponents import Component, components, Type, SuffixIdentifier, icon_paths
 from .Events import create_events
 from .Items import item_table, BfBBItem
-from .Locations import location_table, BfBBLocation
+from .Locations import location_table, BfBBLocation, patrick_location_table
 from .Options import BfBBOptions, RandomizeGateCost
 from .Regions import create_regions
 from .Rom import BfBBContainer
@@ -39,6 +40,7 @@ class BattleForBikiniBottomWeb(WebWorld):
         "setup/en",
         ["Cyb3R"]
     )]
+    rich_text_options_doc = True
     theme = "ocean"
 
 
@@ -82,6 +84,8 @@ class BattleForBikiniBottom(World):
                                               ConnectionNames.hub3_kf01, ConnectionNames.hub3_gy01, ConnectionNames.cb_b3]
         self.spat_counter: int = 0
         self.sock_counter: int = 0
+        self.required_socks: int = 80
+        self.required_spats: int = 75
 
     def generate_early(self) -> None:
         if hasattr(self.multiworld, "re_gen_passthrough"):
@@ -95,6 +99,17 @@ class BattleForBikiniBottom(World):
             self.roll_level_order()
             self.set_gate_costs()
         self.gate_costs[ConnectionNames.cb_b3] = self.options.required_spatulas.value
+        self.required_socks = self.get_required_socks()
+        self.required_spats = max(self.gate_costs.values())
+
+    def get_required_socks(self) -> int:
+        socks = 80
+        for pat_loc in sorted(patrick_location_table, key=patrick_location_table.get, reverse=True):
+            if pat_loc in self.options.exclude_locations:
+                socks -= 10
+            else:
+                break
+        return socks
 
     def roll_level_order(self):
         level_left = [ConnectionNames.hub1_bb01, ConnectionNames.hub1_gl01, ConnectionNames.hub2_rb01,
@@ -120,19 +135,19 @@ class BattleForBikiniBottom(World):
         last_level = None
         min_incs = [0, 3, 5]
         last_cost = 1
+        level_inc_min = min_incs[self.options.randomize_gate_cost.value - 1]
+        level_inc_max = 8
+        if self.options.include_socks.value:
+            level_inc_max += 6
+        if self.options.include_level_items.value:
+            level_inc_max += 3
+        if self.options.include_purple_so.value:
+            level_inc_max += 1
+        if self.options.randomize_gate_cost.value == 3:
+            level_inc_max = round(level_inc_max * 1.35)
+        elif self.options.randomize_gate_cost.value == 1:
+            level_inc_max = round(level_inc_max * 0.75)
         for v in self.level_order:
-            level_inc_min = min_incs[self.options.randomize_gate_cost.value - 1]
-            level_inc_max = 8
-            if self.options.include_socks.value:
-                level_inc_max += 6
-            if self.options.include_level_items.value:
-                level_inc_max += 3
-            if self.options.include_purple_so.value:
-                level_inc_max += 1
-            if self.options.randomize_gate_cost.value == 3:
-                level_inc_max = round(level_inc_max * 1.35)
-            elif self.options.randomize_gate_cost.value == 1:
-                level_inc_max = round(level_inc_max * 0.75)
             # set max increment after boss to 1/2
             if last_level is not None and last_level in [ConnectionNames.hub1_b1, ConnectionNames.hub2_b2]:
                 level_inc_max = 2 if self.options.include_skills else 1
@@ -177,14 +192,6 @@ class BattleForBikiniBottom(World):
             so_weights = [1, 2, 5, 3, 2]
             itempool += self.random.choices(so_items, weights=so_weights, k=38)
 
-        # adjust for starting inv prog. items
-        k = 0
-        for item in self.multiworld.precollected_items[self.player]:
-            if item.name in itempool and item.advancement:
-                itempool.remove(item.name)
-                k = k + 1
-        if k > 0:
-            itempool += self.random.choices(filler_items, weights=filler_weights, k=k)
         # Convert itempool into real items
         itempool = list(map(lambda name: self.create_item(name), itempool))
         return itempool
@@ -231,12 +238,14 @@ class BattleForBikiniBottom(World):
         classification = item_data.classification
         if name == ItemNames.spat:
             self.spat_counter += 1
-            if self.spat_counter > self.options.required_spatulas:
+            if self.spat_counter > self.required_spats:
                 classification = ItemClassification.progression_skip_balancing
         if name == ItemNames.sock:
             self.sock_counter += 1
             if self.sock_counter > 40:
                 classification = ItemClassification.progression_skip_balancing
+            if self.options.accessibility.value == Accessibility.option_minimal and self.sock_counter > self.required_socks:
+                classification = ItemClassification.useful
         if name in [ItemNames.so_500, ItemNames.so_750, ItemNames.so_1000] and self.options.include_purple_so == 0:
             classification = ItemClassification.useful
         item = BfBBItem(name, classification, item_data.id, self.player)

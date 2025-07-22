@@ -49,14 +49,14 @@ spat_rules = [
     # locations
     {
         ItemNames.spat: {
-            LocationNames.spat_ks_01: lambda player: lambda state: state.has(ItemNames.spat, player, 5),
-            LocationNames.spat_ks_02: lambda player: lambda state: state.has(ItemNames.spat, player, 10),
-            LocationNames.spat_ks_03: lambda player: lambda state: state.has(ItemNames.spat, player, 15),
-            LocationNames.spat_ks_04: lambda player: lambda state: state.has(ItemNames.spat, player, 20),
-            LocationNames.spat_ks_05: lambda player: lambda state: state.has(ItemNames.spat, player, 25),
-            LocationNames.spat_ks_06: lambda player: lambda state: state.has(ItemNames.spat, player, 30),
-            LocationNames.spat_ks_07: lambda player: lambda state: state.has(ItemNames.spat, player, 35),
-            LocationNames.spat_ks_08: lambda player: lambda state: state.has(ItemNames.spat, player, 40),
+            LocationNames.spat_ks_01: lambda player: lambda state: state.has(ItemNames.spat, player, min(5, state.multiworld.worlds[player].options.required_spatulas.value)),
+            LocationNames.spat_ks_02: lambda player: lambda state: state.has(ItemNames.spat, player, min(10, state.multiworld.worlds[player].options.required_spatulas.value)),
+            LocationNames.spat_ks_03: lambda player: lambda state: state.has(ItemNames.spat, player, min(15, state.multiworld.worlds[player].options.required_spatulas.value)),
+            LocationNames.spat_ks_04: lambda player: lambda state: state.has(ItemNames.spat, player, min(20, state.multiworld.worlds[player].options.required_spatulas.value)),
+            LocationNames.spat_ks_05: lambda player: lambda state: state.has(ItemNames.spat, player, min(25, state.multiworld.worlds[player].options.required_spatulas.value)),
+            LocationNames.spat_ks_06: lambda player: lambda state: state.has(ItemNames.spat, player, min(30, state.multiworld.worlds[player].options.required_spatulas.value)),
+            LocationNames.spat_ks_07: lambda player: lambda state: state.has(ItemNames.spat, player, min(35, state.multiworld.worlds[player].options.required_spatulas.value)),
+            LocationNames.spat_ks_08: lambda player: lambda state: state.has(ItemNames.spat, player, min(40, state.multiworld.worlds[player].options.required_spatulas.value)),
         }
     }
 ]
