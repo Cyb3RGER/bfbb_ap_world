@@ -1,7 +1,7 @@
 # BfBB AP world
 
 Battle for Bikini Bottom [Archipelago](https://archipelago.gg/) world.
-More info [here](https://github.com/Cyb3RGER/bfbb_ap_world/blob/main/docs/en_bfbb.md).
+More info [here](https://github.com/Cyb3RGER/bfbb_ap_world/blob/main/docs/en_Battle%20for%20Bikini%20Bottom.md).
 
 ## Installation & Usage
 
