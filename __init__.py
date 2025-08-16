@@ -86,6 +86,8 @@ class BattleForBikiniBottom(World):
         self.sock_counter: int = 0
         self.required_socks: int = 80
         self.required_spats: int = 75
+        tracker_variant = settings.get_settings().bfbb_options.tracker_variant or 'detailed'
+        BattleForBikiniBottom.tracker_world = tracker_world_overview if tracker_variant == 'overview' else tracker_world_detailed
 
     def generate_early(self) -> None:
         if hasattr(self.multiworld, "re_gen_passthrough"):
@@ -275,9 +277,3 @@ class BattleForBikiniBottom(World):
             }
         )
         apbfbb.write()
-
-
-def apply_tracker_variant():
-    tracker_variant = settings.get_settings().bfbb_options.tracker_variant or 'detailed'
-    BattleForBikiniBottom.tracker_world = tracker_world_overview if tracker_variant == 'overview' else tracker_world_detailed
-apply_tracker_variant()
