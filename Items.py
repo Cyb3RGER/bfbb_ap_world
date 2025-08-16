@@ -1,6 +1,6 @@
 import typing
 from BaseClasses import Item, ItemClassification
-from .names import ItemNames
+from .constants import ItemNames, game_name
 
 
 class ItemData(typing.NamedTuple):
@@ -18,7 +18,7 @@ class ItemData(typing.NamedTuple):
 
 
 class BfBBItem(Item):
-    game: str = "Battle for Bikini Bottom"
+    game: str = game_name
 
 
 base_id = 1490000
@@ -35,8 +35,8 @@ item_table = {
     ItemNames.so_750: ItemData(base_id + 5, ItemClassification.progression_deprioritized_skip_balancing),
     ItemNames.so_1000: ItemData(base_id + 6, ItemClassification.progression_deprioritized_skip_balancing),
     # skills
-    ItemNames.bubble_bowl: ItemData(base_id + 7, ItemClassification.progression_deprioritized),
-    ItemNames.cruise_bubble: ItemData(base_id + 8, ItemClassification.progression_deprioritized),
+    ItemNames.bubble_bowl: ItemData(base_id + 7, ItemClassification.progression),
+    ItemNames.cruise_bubble: ItemData(base_id + 8, ItemClassification.progression),
     # golden underwear
     ItemNames.golden_underwear: ItemData(base_id + 9, ItemClassification.useful),
     # level pickups

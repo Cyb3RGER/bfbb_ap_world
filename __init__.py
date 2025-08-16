@@ -239,11 +239,11 @@ class BattleForBikiniBottom(World):
         if name == ItemNames.spat:
             self.spat_counter += 1
             if self.spat_counter > self.required_spats:
-                classification = ItemClassification.progression_skip_balancing
+                classification |= ItemClassification.skip_balancing
         if name == ItemNames.sock:
             self.sock_counter += 1
             if self.sock_counter > 40:
-                classification = ItemClassification.progression_skip_balancing
+                classification |= ItemClassification.skip_balancing
             if self.options.accessibility.value == Accessibility.option_minimal and self.sock_counter > self.required_socks:
                 classification = ItemClassification.useful
         if name in [ItemNames.so_500, ItemNames.so_750, ItemNames.so_1000] and self.options.include_purple_so == 0:
