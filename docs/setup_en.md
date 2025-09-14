@@ -79,9 +79,11 @@ The recommended way to host a game is to use the Archipelago hosting service. Th
 The setup for this AP world is rather complex, so here are some common issues encountered during setup and how to fix
 them.
 
-### I don't see the BfBB Client in the Launcher.
+#### Error: `No module named [...]`
 
-Make sure you have installed the AP world. It should be in the `custom_worlds` folder within your AP directory.
+This means the client is missing a required Python library. The most common cause is that the additional libraries were not installed correctly.  
+
+Double-check that you copied **all** files from the included `lib\` folder in the download into your Archipelago `lib\` folder. If anything is missing, reinstall them, restart, try again.
 
 ### I see the BfBB Client, but it doesn't open.
 
@@ -114,6 +116,10 @@ If the issue persists, try the following:
 This is normal. The client becomes unresponsive while patching, which can take a while, especially the first time.
 
 ### I get an error during patching...
+
+#### Error: `No module named [...]`
+
+Ensure you actually placed the content of included `lib\` folder into your AP `lib\` folder.
 
 #### Error: `Failed to resolve Python.Runtime.Loader.Initialize from [...]\lib\pythonnet\runtime\Python.Runtime.dll`
 
