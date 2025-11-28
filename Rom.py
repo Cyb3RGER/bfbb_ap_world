@@ -8,14 +8,14 @@ from enum import Enum
 from typing import Any
 
 from settings import get_settings
-from worlds.Files import AutoPatchRegister, APPlayerContainer
+from worlds.Files import APPlayerContainer
 from . import Patches
 from .constants import ConnectionNames, game_name
 from .inc.wwrando.wwlib.gcm import GCM
 
 BFBB_HASH = "9e18f9a0032c4f3092945dc38a6517d3"
 
-class BfBBContainer(APPlayerContainer, metaclass=AutoPatchRegister):
+class BfBBContainer(APPlayerContainer):
     game = game_name
     hash: str = BFBB_HASH
     patch_file_ending: str = ".apbfbb"
