@@ -6,7 +6,7 @@ $tmpPath = "release\tmp"
 $apworldBuildPath = "release\tmp\bfbb"
 $apworldOutPath = "release\bfbb.apworld"
 $apworldOutZip = "release\tmp\bfbb.zip"
-$py_versions = "3.11", "3.12"
+$py_versions = "3.11", "3.12", "3.13"
 
 
 foreach ($py_version in $py_versions)
@@ -56,7 +56,8 @@ if (Test-Path $apworldOutZip)
 # zip it
 #Compress-Archive -Path $apworldBuildPath -DestinationPath $apworldOutZip -Force
 Set-Location -Path $tmpPath
-7z a -tzip -y "bfbb.zip" "bfbb"
+$SevenZip = Join-Path $PSScriptRoot "release\7zip\7z.exe"
+& $SevenZip a -tzip -y "bfbb.zip" "bfbb"
 Set-Location -Path "..\..\"
 # Check if the target file exists and remove it
 if (Test-Path $apworldOutPath)
