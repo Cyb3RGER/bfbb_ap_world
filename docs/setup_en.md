@@ -14,8 +14,6 @@
 
 - Place ``bfbb.apworld`` in ``custom_worlds`` of your AP installation.
 - Place the included files from the ``lib/`` folder into ``lib/`` of your AP installation.
-- Place the ISO in the root folder of your AP installation and make sure it's
-  named ``Nickelodeon SpongeBob SquarePants - Battle for Bikini Bottom (USA).iso``.
 
 For more information about .apworlds
 see [here](https://github.com/ArchipelagoMW/Archipelago/blob/main/docs/apworld%20specification.md)
@@ -38,10 +36,17 @@ validator page: [YAML Validation page](https://archipelago.gg/mysterycheck)
 
 ## Joining a MultiWorld Game
 
-Start ``ArchipelagoLauncher.exe`` and choose ``BfBB Client``. You will be asked to provide a ``.apbfbb`` patch file so
-choose your patch file. The client will then open, patch and attempt to open the resulting ``.gcm`` ISO file. Patching
-can take a while and the client will become unresponsive while patching. You can also select a ``.gcm`` directly to just
-open it without patching or just click cancel, if you don't want to patch or open any ISO.
+Start ``ArchipelagoLauncher.exe`` and choose ``Open Patch``, and select your ``.apbfbb`` patch file.
+
+When opening a BfBB patch file for first time, you will also be prompted to select your BfBB ISO file. The patching process can take a while and the client may become unresponsive, so please be patient.
+
+After patching is complete, if you are using autostart (which is enabled by default), you will also be prompted to select your Dolphin executable.
+
+Alternatively, you can select the ``BfBB Client`` directly from the Launcher. This will ask for one of the following:
+- An ``.apbfbb`` file to patch and run the game.
+- An already-patched ``.gcm`` file to run the game directly.
+
+You can also select ``Cancel`` to open the client by itself without patching or launching a game.
 
 ### Connect to the Client
 
