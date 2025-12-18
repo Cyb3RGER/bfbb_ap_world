@@ -210,6 +210,7 @@ class BattleForBikiniBottom(World):
 
     def fill_slot_data(self):
         return {
+            "version": self.world_version.as_simple_string(), #TODO: add version check/warning to patch/client
             "death_link": self.options.death_link.value,
             "ring_link": self.options.ring_link.value,
             "shiny_object_to_ring_ratio": self.options.shiny_object_to_ring_ratio.value,
